@@ -35,6 +35,16 @@
   --color-r-green: oklch(44% 0.15 145); --color-r-blue: oklch(40% 0.15 258); --color-r-grey: oklch(42% 0.04 60);
   --color-r-gold: oklch(74% 0.15 82); --color-r-purple: oklch(42% 0.17 325);
 
+  /* critters: harpies, sky dragon, slimes, bunny, villagers */
+  --color-critter-line: oklch(25% 0.035 255);
+  --color-harpy: oklch(80% 0.09 230); --color-harpy-dark: oklch(58% 0.13 245); --color-harpy-hair: oklch(46% 0.12 250);
+  --color-skin: oklch(85% 0.06 60); --color-eye: oklch(22% 0.03 260); --color-talon: oklch(80% 0.14 85);
+  --color-dragon: oklch(97% 0.012 230); --color-dragon-shade: oklch(80% 0.045 240); --color-dragon-mane: oklch(74% 0.15 75);
+  --color-slime-green: oklch(74% 0.17 140); --color-slime-blue: oklch(68% 0.14 245); --color-slime-pink: oklch(76% 0.13 350); --color-slime-shine: oklch(97% 0.02 140);
+  --color-bunny: oklch(97% 0.008 80); --color-bunny-pink: oklch(80% 0.09 10);
+  --color-villager-hair: oklch(45% 0.08 50); --color-shirt-green: oklch(58% 0.14 145); --color-shirt-red: oklch(55% 0.17 28);
+  --color-pants: oklch(42% 0.08 255); --color-straw: oklch(82% 0.12 88);
+
   --font-display: "Press Start 2P", ui-monospace, monospace;
   --font-body: "Nunito", ui-rounded, ui-sans-serif, sans-serif;
   --font-outlier: var(--font-body);

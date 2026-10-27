@@ -4,7 +4,7 @@
 /* Hallmark · pre-emit critique: P4 H4 E4 S5 R3 V5 · weakest: R, the game frame is decoration by design; kept frames to panels and buttons, text stays plain on parchment */
 /* Hallmark · answered F4 · both actions are Stardew-style pixel buttons by request; Email is red, Scholar is parchment so the primary still reads first */
 /* Hallmark · dismissed 40 · body ink is never set on the sky; every line of text sits on parchment, wood or dirt, each with its own ink */
-@import url("./tokens.css?v=fca909a4");
+@import url("./tokens.css?v=a02000e0");
 @import url("./base.css?v=e9862c24");
 
 /* no sideways bounce or swipe: the page only scrolls up and down */
@@ -58,6 +58,9 @@ body {
 .cloud-7 { top: 2500px; right: 5%; transform: scale(0.65); animation: drift 140s linear infinite alternate-reverse; }
 @keyframes drift { from { translate: -40px 0; } to { translate: 40px 0; } }
 @media (prefers-reduced-motion: reduce) { .cloud { animation: none; } }
+/* critters fly behind the panels on wide screens; on phones they come over the page only when tapped */
+.sky-critters { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.ground-critters { position: absolute; left: 0; bottom: calc(100% - 10px); z-index: 1; pointer-events: none; }
 
 .hud, main, .ground { position: relative; z-index: 1; }
 /* the top bar stays on screen so every section is one click away */
@@ -354,6 +357,7 @@ a.pub-title:active { color: var(--color-ink); }
   h2 { font-size: 0.9375rem; }
   .slot-sm { width: 36px; height: 36px; }
   .tag { white-space: normal; }
+  .sky-critters { z-index: 2; }
 }
 @media (max-width: 22rem) {
   h1 { font-size: 1.125rem; }
