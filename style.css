@@ -344,7 +344,14 @@ a.pub-title:active { color: var(--color-ink); }
 .ground-text a { color: var(--color-parchment); text-decoration-color: var(--color-dirt-light); transition: color var(--dur-micro) var(--ease-out); }
 .ground-text a:hover { color: var(--color-grass-light); }
 .ground-text a:active { color: var(--color-parchment-hi); }
-.credit { flex-basis: 100%; color: var(--color-parchment-lo); }
+/* the small print under the name: thanks on the left, the date on the right, over a dashed rule */
+.foot-meta {
+  flex-basis: 100%;
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2xs) var(--space-lg);
+  margin-top: var(--space-xs); padding-top: var(--space-sm);
+  border-top: 2px dashed var(--color-dirt-light);
+  font-size: var(--text-xs); color: var(--color-parchment-lo);
+}
 
 @media (max-width: 48rem) {
   .panel { padding: var(--space-lg) var(--space-md); }
@@ -371,6 +378,7 @@ a.pub-title:active { color: var(--color-ink); }
   .px-btn { font-size: 0.75rem; }
   .px-btn-sm { min-height: 40px; padding-inline: var(--space-md); }
   .ground-text a { display: inline-block; padding-block: var(--space-xs); }
+  .foot-meta a { display: inline; padding: 0; }
   .window { margin-bottom: var(--space-lg); }
   .window img { aspect-ratio: 2 / 1; }
   h2 { font-size: 0.9375rem; }
