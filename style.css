@@ -4,7 +4,7 @@
 /* Hallmark · pre-emit critique: P4 H4 E4 S5 R3 V5 · weakest: R, the game frame is decoration by design; kept frames to panels and buttons, text stays plain on parchment */
 /* Hallmark · answered F4 · both actions are Stardew-style pixel buttons by request; Email is red, Scholar is parchment so the primary still reads first */
 /* Hallmark · dismissed 40 · body ink is never set on the sky; every line of text sits on parchment, wood or dirt, each with its own ink */
-@import url("./tokens.css?v=0d108543");
+@import url("./tokens.css?v=336b648f");
 @import url("./base.css?v=e9862c24");
 
 /* no sideways bounce or swipe: the page only scrolls up and down */
@@ -99,7 +99,7 @@ body {
 .plank nav a {
   padding: var(--space-xs) var(--space-sm);
   font-family: var(--font-display);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 400;
   color: var(--color-parchment-hi);
   text-shadow: 1px 1px 0 var(--color-wood-dark);
@@ -121,6 +121,7 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--spa
   background: var(--color-parchment);
   color: var(--color-ink);
 }
+.hero { padding-top: var(--space-lg); }
 .panel-head { display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-lg); }
 h2 {
   font-size: 1.625rem;
@@ -152,13 +153,13 @@ h2 {
 
 /* ── hero ── */
 .window {
-  margin: 0 0 var(--space-xl);
+  margin: 0 0 var(--space-lg);
   padding: var(--px);
   background: var(--color-wood-dark);
   box-shadow: 0 0 0 var(--px) var(--color-wood);
 }
 /* fixed ratio: the photo scales, it never re-crops */
-.window img { width: 100%; height: auto; aspect-ratio: 5 / 1; object-fit: cover; object-position: 50% 60%; }
+.window img { width: 100%; height: auto; aspect-ratio: 6 / 1; object-fit: cover; object-position: 50% 60%; }
 
 .intro { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: var(--space-xl); align-items: start; }
 .slot-portrait { padding: calc(2 * var(--px)); }
@@ -172,7 +173,7 @@ h1 {
   color: var(--color-ink);
   text-shadow: 3px 3px 0 var(--color-shadow);
 }
-.role { margin-top: var(--space-sm); font-size: 1.5rem; font-weight: 800; line-height: 1.4; color: var(--color-r-green); }
+.role { margin-top: var(--space-sm); font-size: 1.625rem; font-weight: 800; line-height: 1.4; color: var(--color-r-green); }
 .lede { margin-top: var(--space-md); max-width: 64ch; color: var(--color-ink-2); line-height: 1.65; }
 .lede a, .prose a {
   color: var(--color-accent);

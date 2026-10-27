@@ -11,8 +11,9 @@
 
   // sprite sheets: frames side by side, every sprite faces left as in the game's textures
   const SHEETS = {
-    harpy: [6, 'harpy'], merchant: [16, 'merchant-walk'], bunny: [7, 'bunny'],
-    green: [2, 'green-slime'], blue: [2, 'blue-slime'], pinky: [2, 'pinky'], heart: [1, 'heart'],
+    harpy: [6, 'harpy'], merchant: [16, 'merchant-walk'], traveller: [14, 'traveller'], bunny: [7, 'bunny'],
+    green: [2, 'green-slime'], duck: [8, 'duck'], squirrel: [5, 'squirrel'], turtle: [7, 'turtle'],
+    snail: [4, 'snail'], cat: [1, 'cat'], dog: [1, 'dog'], heart: [1, 'heart'],
     head: [1, 'wyvern-head'], legs: [1, 'wyvern-legs'], body: [1, 'wyvern-body'],
     body2: [1, 'wyvern-body-2'], body3: [1, 'wyvern-body-3'], tail: [1, 'wyvern-tail'],
   };
@@ -176,15 +177,31 @@
     if (f.kind === 'harpy') { draw(sctx, 'harpy', Math.floor(f.flap), f.x, f.y, f.right, SCALE); return; }
     // tail first, head last; textures point up, so turn them a quarter past the heading,
     // and mirror when heading left so the fin stays on top
-    for (let i = f.segs.length - 1; i >= 0; i--) {
-      const sg = f.segs[i], s = img[sg.key]; if (!s) continue;
-      const w = s.w * SCALE, h = s.h * SCALE;
+    const part = (key, x, y, a) => {
+      const s = img[key]; if (!s) return;
       sctx.save();
-      sctx.translate(snap(sg.x), snap(sg.y));
-      sctx.rotate(sg.a + Math.PI / 2);
+      sctx.translate(snap(x), snap(y));
+      sctx.rotate(a + Math.PI / 2);
       if (f.left) sctx.scale(-1, 1);
-      sctx.drawImage(s.im, -SPINE[sg.key] * SCALE, -h / 2, w, h);
+      sctx.drawImage(s.im, -SPINE[key] * SCALE, -s.h * SCALE / 2, s.w * SCALE, s.h * SCALE);
       sctx.restore();
+    };
+    const segs = f.segs, n = segs.length, step = 8 * SCALE;
+    for (let i = n - 1; i >= 0; i--) {
+      const b = segs[i];
+      part(b.key, b.x, b.y, b.a);
+      if (i === 0) break;
+      // fill the joint toward the next part with body links every few pixels, so a bend
+      // reads as one flexible body instead of separate plates (the head and the tail's
+      // thin end cover their own joints)
+      const a = segs[i - 1];
+      const fill = a.key === 'head' || a.key === 'legs' ? 'body' : a.key;
+      const reach = b.key === 'tail' ? 0.45 : 1;
+      const dx = a.x - b.x, dy = a.y - b.y, len = Math.hypot(dx, dy);
+      for (let d = step; d < len * reach; d += step) {
+        const t = 1 - d / len;
+        part(fill, a.x - dx * t, a.y - dy * t, b.a);
+      }
     }
   }
 
@@ -201,16 +218,25 @@
     GH = Math.round(200 * G / 1.5);
     gctx = fit(ground, GW, GH);
   }
+  // one of each, as the game would have them: walk frames, pixels walked per frame (so feet never
+  // slide), walking speed in px/s, how long they wander and rest, and which way the art faces.
+  // Wide ground gets the whole cast, a phone's narrow strip the first six.
+  const CAST = [
+    { key: 'merchant', walk: [2, 14], idle: 0, air: 1, stride: 4, speed: 42, go: [1.5, 4.5], rest: [1.5, 5] },
+    { key: 'green', slime: true },
+    { key: 'bunny', walk: [1, 6], idle: 0, air: 4, stride: 6, speed: 80, go: [0.8, 2.5], rest: [1, 3.5] },
+    { key: 'cat', walk: [0, 1], idle: 0, stride: 6, speed: 46, go: [1, 3], rest: [2, 6], bob: true },
+    { key: 'duck', walk: [0, 8], idle: 0, stride: 3, speed: 30, go: [1.5, 4], rest: [1.5, 4] },
+    { key: 'traveller', walk: [0, 14], idle: 0, stride: 4, speed: 52, go: [2, 5], rest: [1.5, 4], facesRight: true },
+    { key: 'dog', walk: [0, 1], idle: 0, stride: 7, speed: 60, go: [1, 3.5], rest: [2, 5], bob: true },
+    { key: 'squirrel', walk: [0, 5], idle: 0, stride: 6, speed: 95, go: [0.5, 1.6], rest: [1, 3] },
+    { key: 'turtle', walk: [0, 7], idle: 0, stride: 3, speed: 14, go: [3, 7], rest: [2, 5] },
+    { key: 'snail', walk: [0, 4], idle: 0, stride: 2, speed: 7, go: [5, 10], rest: [1, 3] },
+  ];
   function makeWalkers() {
-    const spec = [
-      { kind: 'merchant', key: 'merchant' },
-      { kind: 'bunny', key: 'bunny' },
-      { kind: 'slime', key: 'green' },
-      { kind: 'slime', key: 'blue' },
-      { kind: 'slime', key: 'pinky' },
-      { kind: 'bunny', key: 'bunny' },
-    ];
-    for (const s of spec) walkers.push({ ...s, x: rand(60, GW - 60), dir: Math.random() < 0.5 ? -1 : 1, h: 0, vy: 0, vx: 0, timer: rand(0.5, 3), moving: false, dist: 0, jumps: 0, wobble: 0 });
+    const cast = GW < 768 ? CAST.slice(0, 6) : CAST;
+    // spread them out along the ground rather than in a clump
+    cast.forEach((c, i) => walkers.push({ ...c, kind: c.slime ? 'slime' : 'walker', x: (i + 0.5 + rand(-0.3, 0.3)) * GW / cast.length, dir: Math.random() < 0.5 ? -1 : 1, h: 0, vy: 0, vx: 0, timer: rand(0.5, 3), moving: false, dist: 0, jumps: 0, wobble: 0 }));
   }
   // jumps and gravity grow with the sprites, so a bigger slime hops just as high relative to itself
   function jump(w, vy, vx) { if (w.h > 0 || w.vy > 0) return; w.vy = vy * G / 1.5; w.vx = vx; }
@@ -234,10 +260,10 @@
       w.timer -= dt;
       if (w.timer <= 0) {
         w.moving = !w.moving;
-        w.timer = w.moving ? rand(1.5, 4.5) : rand(1.5, 5);
+        w.timer = w.moving ? rand(...w.go) : rand(...w.rest);
         if (w.moving && Math.random() < 0.45) w.dir *= -1;
       }
-      const top = (w.kind === 'bunny' ? 80 : 42) * G;
+      const top = w.speed * G;
       const want = w.moving ? top * w.dir : 0;
       w.vx += (want - w.vx) * Math.min(1, dt * 5);
       w.x += w.vx * dt;
@@ -247,21 +273,18 @@
     if (w.x > GW - 40) { w.x = GW - 40; w.dir = -1; w.vx = -Math.abs(w.vx); }
   }
   function frameOf(w) {
-    const airborne = w.h > 0;
-    if (w.kind === 'slime') return airborne ? 1 : Math.floor(w.wobble) % 2;
-    if (w.kind === 'merchant') {
-      if (airborne) return 1;
-      // walk frames 2 to 15, one per 4 px walked so the feet never slide
-      return Math.abs(w.vx) > 4 ? 2 + Math.floor(w.dist / (4 * G)) % 14 : 0;
-    }
-    if (airborne) return 4;
-    return Math.abs(w.vx) > 6 ? 1 + Math.floor(w.dist / (6 * G)) % 6 : 0;
+    if (w.kind === 'slime') return w.h > 0 ? 1 : Math.floor(w.wobble) % 2;
+    if (w.h > 0 && w.air !== undefined) return w.air;
+    if (Math.abs(w.vx) < 3) return w.idle;
+    return w.walk[0] + Math.floor(w.dist / (w.stride * G)) % w.walk[1];
   }
   function drawWalker(w) {
     const s = img[w.key]; if (!s) return;
     if (w.kind === 'slime') gctx.globalAlpha = 0.86; // slimes are see-through in the game
+    // single-frame pets bob a pixel with each step
+    const bob = w.bob && Math.abs(w.vx) > 3 ? (Math.floor(w.dist / (w.stride * G)) % 2) * G : 0;
     // feet rest on the grass line at the bottom of the canvas
-    draw(gctx, w.key, frameOf(w), w.x, GH - s.h * G / 2 - w.h + 3, w.dir > 0, G);
+    draw(gctx, w.key, frameOf(w), w.x, GH - s.h * G / 2 - w.h - bob + 3, (w.dir > 0) !== !!w.facesRight, G);
     gctx.globalAlpha = 1;
   }
 
