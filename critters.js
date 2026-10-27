@@ -41,6 +41,9 @@
   // the page-wide scale set in the head; sprites follow it in half steps so their pixels stay even
   const zoom = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--zoom')) || 1;
   const half = (v) => Math.max(1, Math.round(v * 2) / 2);
+  // one scale for every critter, sky and ground alike, so their sizes compare as in the game:
+  // 1.5x on wide screens (each art pixel exactly 3 px), 1x on phones
+  const unitScale = () => (innerWidth >= 768 ? half(1.5 * zoom()) : 1);
   const snap = (v) => Math.round(v);
 
   // draw frame `i` of a sheet centred on (x, y); `right` mirrors it to face right
@@ -60,7 +63,7 @@
 
   function layoutSky() {
     VW = innerWidth; VH = innerHeight;
-    SCALE = half(zoom());
+    SCALE = unitScale();
     sctx = fit(sky, VW, VH);
     const p = document.querySelector('.panel').getBoundingClientRect();
     panel = { l: p.left - 12, r: p.right + 12 };
@@ -96,6 +99,10 @@
   }
   function makeWanderer(key) {
     return { kind: 'wander', key, x: 0, y: 0, vx: 0, vy: 0, right: false, accel: 170, max: 110, flap: Math.random() * 6 };
+  }
+  // speeds are per unit of scale, so bigger critters keep the same pace relative to their size
+  function pace(f) {
+    if (f.kind === 'wander') { f.accelS = f.accel * SCALE; f.maxS = f.max * SCALE; }
   }
 
   // Critters crossing the sky, each with its own way of flying: birds flap straight across with
@@ -147,10 +154,12 @@
   }
 
   // Wyvern (worm AI): the head flies at a near constant speed and can only turn so fast, and the
-  // body follows. Laid out as the wiki's full-length wyvern: head, body, legs, four bodies, legs,
-  // body, the two narrowing bodies, tail; GAPS are the centre-to-centre distances in that picture.
-  const WYVERN = ['head', 'body', 'legs', 'body', 'body', 'body', 'body', 'legs', 'body', 'body2', 'body3', 'tail'];
-  const GAPS = [0, 62, 36, 36, 36, 36, 36, 36, 36, 39, 38, 66];
+  // body follows. Fifteen segments as in the game: head, body, legs, six bodies, legs, two bodies,
+  // then the three tail pieces; GAPS are centre-to-centre distances measured off the wiki's
+  // full-length picture.
+  const WYVERN = ['head', 'body', 'legs', 'body', 'body', 'body', 'body', 'body', 'body', 'legs', 'body', 'body', 'body2', 'body3', 'tail'];
+  const GAPS = [0, 62, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 39, 38, 66];
+  const I2 = WYVERN.indexOf('body2'), I3 = WYVERN.indexOf('body3'), IT = WYVERN.indexOf('tail');
   // where the spine runs across each texture (the legs and head are wider on one side)
   const SPINE = { head: 20, legs: 16, body: 16, body2: 14, body3: 10, tail: 6 };
   function makeWyvern() {
@@ -189,7 +198,7 @@
     diff = Math.atan2(Math.sin(diff), Math.cos(diff));
     const turn = f.turn * dt;
     f.ang += Math.max(-turn, Math.min(turn, diff));
-    f.x += Math.cos(f.ang) * f.v * dt; f.y += Math.sin(f.ang) * f.v * dt;
+    f.x += Math.cos(f.ang) * f.v * SCALE * dt; f.y += Math.sin(f.ang) * f.v * SCALE * dt;
     // one facing for the whole body, switched only once the heading is clearly left or right
     const c = Math.cos(f.ang);
     if (c < -0.35) f.left = true; else if (c > 0.35) f.left = false;
@@ -223,7 +232,7 @@
     // arc length at each control point; P[i + 1] is segment i
     const at = [0];
     for (let k = 1; k < P.length; k++) at.push(at[k - 1] + Math.hypot(P[k].x - P[k - 1].x, P[k].y - P[k - 1].y));
-    const headEnd = 100 * S, b2 = (at[9] + at[10]) / 2, b3 = (at[10] + at[11]) / 2, tailStart = at[12] - 48 * S;
+    const headEnd = 100 * S, b2 = (at[I2] + at[I2 + 1]) / 2, b3 = (at[I3] + at[I3 + 1]) / 2, tailStart = at[IT + 1] - 48 * S;
     const fx = f.left ? -1 : 1, ROW0 = 7, PERIOD = 30;
     let lastRow = -1;
     for (let k = 0; k < P.length - 1; k++) {
@@ -266,12 +275,13 @@
   function stepWanderer(f, dt, t) {
     if (t > f.until || (wide && Math.hypot(f.tx - f.x, f.ty - f.y) < 30)) waypoint(f);
     const dx = f.tx - f.x, dy = f.ty - f.y, d = Math.hypot(dx, dy) || 1;
-    f.vx += dx / d * f.accel * dt;
-    f.vy += dy / d * f.accel * dt;
+    pace(f);
+    f.vx += dx / d * f.accelS * dt;
+    f.vy += dy / d * f.accelS * dt;
     const drag = d < 60 ? 1.6 : 0.35;
     f.vx -= f.vx * drag * dt; f.vy -= f.vy * drag * dt;
     const sp = Math.hypot(f.vx, f.vy);
-    if (sp > f.max) { f.vx *= f.max / sp; f.vy *= f.max / sp; }
+    if (sp > f.maxS) { f.vx *= f.maxS / sp; f.vy *= f.maxS / sp; }
     f.x += f.vx * dt; f.y += f.vy * dt;
     f.flap += dt * 12.5;
     if (f.vx > 12) f.right = true; else if (f.vx < -12) f.right = false;
@@ -312,7 +322,7 @@
   const GRAVITY = 1080; // the game's 0.3 px per tick², in px/s²
   function layoutGround() {
     GW = ground.parentElement.clientWidth;
-    G = half(1.5 * zoom());
+    G = unitScale();
     GH = Math.round(200 * G / 1.5);
     gctx = fit(ground, GW, GH);
   }
