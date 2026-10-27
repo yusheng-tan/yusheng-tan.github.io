@@ -54,7 +54,7 @@
 
   function layoutSky() {
     VW = innerWidth; VH = innerHeight;
-    SCALE = VW < 768 ? 0.75 : 1;
+    SCALE = 1;
     sctx = fit(sky, VW, VH);
     const p = document.querySelector('.panel').getBoundingClientRect();
     panel = { l: p.left - 12, r: p.right + 12 };
@@ -85,10 +85,15 @@
   }
   // Wyvern (worm AI): the head flies at a near constant speed and can only turn so fast, so it
   // circles and snakes; each segment keeps a fixed gap to the one ahead and points at it.
-  const WYVERN = ['head', 'legs', 'body', 'body', 'body', 'legs', 'body2', 'body2', 'body3', 'body3', 'tail'];
+  // laid out as the wiki's full-length wyvern: head, body, legs, four bodies, legs, body, the two
+  // narrowing bodies, tail. GAPS follow the centre-to-centre distances in that picture, with the
+  // body links drawn a little closer so bends never open a seam on the outside of a curve
+  const WYVERN = ['head', 'body', 'legs', 'body', 'body', 'body', 'body', 'legs', 'body', 'body2', 'body3', 'tail'];
+  const GAPS = [0, 62, 36, 36, 36, 36, 36, 36, 36, 39, 38, 66];
   function makeWyvern() {
     const segs = WYVERN.map((key) => ({ key, x: 0, y: 0, a: 0 }));
-    return { kind: 'wyvern', x: 0, y: 0, ang: 0, v: 120, turn: 1.9, fastV: 280, fastTurn: 3.2, segs, phase: 0 };
+    // wide arcs, as in the game: a turning radius near 150 px both cruising and chasing
+    return { kind: 'wyvern', x: 0, y: 0, ang: 0, v: 150, turn: 1.0, fastV: 300, fastTurn: 2.0, segs, phase: 0 };
   }
   function place(f) {
     const z = zones[Math.floor(Math.random() * zones.length)];
@@ -138,12 +143,15 @@
     f.ang += Math.max(-turn, Math.min(turn, diff)) + Math.sin(t / 520) * 0.35 * dt;
     const v = chasing ? f.fastV : f.v;
     f.x += Math.cos(f.ang) * v * dt; f.y += Math.sin(f.ang) * v * dt;
+    // one facing for the whole body, switched only once the heading is clearly left or right,
+    // so the fin never flickers from side to side on a climb or a dive
+    const c = Math.cos(f.ang);
+    if (c < -0.35) f.left = true; else if (c > 0.35) f.left = false;
     const segs = f.segs;
     segs[0].x = f.x; segs[0].y = f.y; segs[0].a = f.ang;
     for (let i = 1; i < segs.length; i++) {
       const a = segs[i - 1], b = segs[i];
-      // the long head and tail sit further from their neighbours
-      const gap = (i === 1 ? 46 : i === segs.length - 1 ? 52 : 26) * SCALE;
+      const gap = GAPS[i] * SCALE;
       const ex = a.x - b.x, ey = a.y - b.y, el = Math.hypot(ex, ey) || 1;
       b.a = Math.atan2(ey, ex);
       b.x = a.x - ex / el * gap; b.y = a.y - ey / el * gap;
@@ -160,7 +168,7 @@
       sctx.save();
       sctx.translate(snap(sg.x), snap(sg.y));
       sctx.rotate(sg.a + Math.PI / 2);
-      if (Math.cos(sg.a) < 0) sctx.scale(-1, 1);
+      if (f.left) sctx.scale(-1, 1);
       sctx.drawImage(s.im, -w / 2, -h / 2, w, h);
       sctx.restore();
     }
@@ -168,7 +176,9 @@
 
   // ── ground ──
   let gctx, GW;
-  const GH = 180;
+  const GH = 200;
+  // the game's textures already double every art pixel, so 1.5 draws each one as exactly 3 px
+  const G = 1.5;
   const walkers = [];
   const hearts = [];
   const GRAVITY = 1080; // the game's 0.3 px per tick², in px/s²
@@ -201,7 +211,7 @@
         if (Math.random() < 0.3) w.dir *= -1;
         w.jumps++;
         const big = w.jumps % 3 === 0;
-        jump(w, big ? 480 : 330, w.dir * (big ? 150 : 120));
+        jump(w, big ? 470 : 340, w.dir * (big ? 150 : 120) * G);
       }
     } else {
       // town NPC and critter: stand a while, walk a while, now and then turn round
@@ -211,14 +221,14 @@
         w.timer = w.moving ? rand(1.5, 4.5) : rand(1.5, 5);
         if (w.moving && Math.random() < 0.45) w.dir *= -1;
       }
-      const top = w.kind === 'bunny' ? 80 : 42;
+      const top = (w.kind === 'bunny' ? 80 : 42) * G;
       const want = w.moving ? top * w.dir : 0;
       w.vx += (want - w.vx) * Math.min(1, dt * 5);
       w.x += w.vx * dt;
       w.dist += Math.abs(w.vx * dt);
     }
-    if (w.x < 30) { w.x = 30; w.dir = 1; w.vx = Math.abs(w.vx); }
-    if (w.x > GW - 30) { w.x = GW - 30; w.dir = -1; w.vx = -Math.abs(w.vx); }
+    if (w.x < 40) { w.x = 40; w.dir = 1; w.vx = Math.abs(w.vx); }
+    if (w.x > GW - 40) { w.x = GW - 40; w.dir = -1; w.vx = -Math.abs(w.vx); }
   }
   function frameOf(w) {
     const airborne = w.h > 0;
@@ -226,16 +236,16 @@
     if (w.kind === 'merchant') {
       if (airborne) return 1;
       // walk frames 2 to 15, one per 4 px walked so the feet never slide
-      return Math.abs(w.vx) > 4 ? 2 + Math.floor(w.dist / 4) % 14 : 0;
+      return Math.abs(w.vx) > 4 ? 2 + Math.floor(w.dist / (4 * G)) % 14 : 0;
     }
     if (airborne) return 4;
-    return Math.abs(w.vx) > 6 ? 1 + Math.floor(w.dist / 6) % 6 : 0;
+    return Math.abs(w.vx) > 6 ? 1 + Math.floor(w.dist / (6 * G)) % 6 : 0;
   }
   function drawWalker(w) {
     const s = img[w.key]; if (!s) return;
     if (w.kind === 'slime') gctx.globalAlpha = 0.86; // slimes are see-through in the game
     // feet rest on the grass line at the bottom of the canvas
-    draw(gctx, w.key, frameOf(w), w.x, GH - s.h / 2 - w.h + 2, w.dir > 0);
+    draw(gctx, w.key, frameOf(w), w.x, GH - s.h * G / 2 - w.h + 3, w.dir > 0, G);
     gctx.globalAlpha = 1;
   }
 
@@ -253,7 +263,7 @@
         const h = hearts[i]; h.life -= dt; h.y -= 30 * dt;
         if (h.life <= 0) { hearts.splice(i, 1); continue; }
         gctx.globalAlpha = Math.min(1, h.life * 2);
-        draw(gctx, 'heart', 0, h.x, h.y, false);
+        draw(gctx, 'heart', 0, h.x, h.y, false, G);
         gctx.globalAlpha = 1;
       }
     }
@@ -300,7 +310,7 @@
       const x = e.clientX - ground.getBoundingClientRect().left;
       let near = null, best = 100;
       for (const w of walkers) { const d = Math.abs(w.x - x); if (d < best) { best = d; near = w; } }
-      if (near) { jump(near, 420, near.vx * 0.5); hearts.push({ x: near.x, y: GH - 80, life: 1.2 }); }
+      if (near) { jump(near, 440, near.vx * 0.5); hearts.push({ x: near.x, y: GH - 110, life: 1.2 }); }
     });
 
     new IntersectionObserver(([e]) => {

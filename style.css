@@ -109,7 +109,7 @@ body {
 .plank nav a[aria-current="true"] { background: var(--color-parchment); color: var(--color-parchment-ink); }
 
 /* ── panels ── */
-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--space-xl) + 2 * var(--px)); padding-block: var(--space-xl) var(--space-3xl); }
+main { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--space-xl) + 2 * var(--px)); padding-block: var(--space-xl) var(--space-4xl); }
 .panel {
   --panel-hi: var(--color-parchment-hi);
   --panel-lo: var(--color-parchment-lo);
