@@ -111,11 +111,38 @@
     return { kind: 'wyvern', x: 0, y: 0, ang: 0, v: 150, turn: 1.0, fastV: 300, fastTurn: 2.0, segs, phase: 0 };
   }
   function place(f) {
+    if (f.segs) { route(f, true); f.wait = 0.4; f.hidden = true; return; }
     const z = zones[Math.floor(Math.random() * zones.length)];
     f.x = rand(z[0], z[1]); f.y = rand(Math.max(hudBottom + 60, 80), VH - 100);
-    if (f.segs) f.segs.forEach((s, i) => { s.x = f.x; s.y = f.y + i * 8; s.a = -Math.PI / 2; });
     waypoint(f);
   }
+  // lay the wyvern out straight behind its head, so it never appears in a heap
+  function layStraight(f, x, y, ang) {
+    f.x = x; f.y = y; f.ang = ang;
+    let d = 0;
+    f.segs.forEach((s, i) => { d += GAPS[i] * SCALE; s.x = x - Math.cos(ang) * d; s.y = y - Math.sin(ang) * d; s.a = ang; });
+    f.left = Math.cos(ang) < -0.35;
+  }
+  // The wyvern patrols on long routes, as it sweeps the sky in the game: up or down a side
+  // margin (across the screen on phones), in a gentle S, until its whole body has left the
+  // screen; then it waits a moment and comes back the other way, often on the other side.
+  function route(f, enter, dir) {
+    const lanes = zones[0][0] >= 0;
+    f.lanes = lanes;
+    f.hidden = false; f.wait = 0;
+    if (lanes) {
+      const z = enter ? zones[Math.floor(Math.random() * zones.length)]
+        : zones.reduce((a, b) => (Math.abs((a[0] + a[1]) / 2 - f.x) < Math.abs((b[0] + b[1]) / 2 - f.x) ? a : b));
+      f.lane = (z[0] + z[1]) / 2; f.half = (z[1] - z[0]) * 0.35;
+      f.dir = dir || (enter ? (Math.random() < 0.5 ? 1 : -1) : (Math.sin(f.ang) >= 0 ? 1 : -1));
+      if (enter) layStraight(f, f.lane, f.dir > 0 ? -60 : VH + 60, f.dir > 0 ? Math.PI / 2 : -Math.PI / 2);
+    } else {
+      f.laneY = rand(Math.max(hudBottom + 40, 80), VH * 0.6);
+      f.dir = dir || (enter ? (Math.random() < 0.5 ? 1 : -1) : (Math.cos(f.ang) >= 0 ? 1 : -1));
+      if (enter) layStraight(f, f.dir > 0 ? -60 : VW + 60, f.laneY, f.dir > 0 ? 0 : Math.PI);
+    }
+  }
+  function release(f) { if (f.segs) route(f, false); else waypoint(f); }
 
   function chaseTarget(f, t) {
     // a harpy hovers beside the pointer; the wyvern circles whatever it chases on its own
@@ -133,7 +160,15 @@
   function stepFlier(f, dt, t) {
     const chasing = f === chaser;
     let tx = f.tx, ty = f.ty;
-    if (chasing) [tx, ty] = chaseTarget(f, t);
+    if (f.segs && !chasing) {
+      if (f.hidden) {
+        f.wait -= dt;
+        if (f.wait <= 0) route(f, true, f.next);
+        return;
+      }
+      if (f.lanes) { tx = f.lane + Math.sin(t / 700 + f.phase) * f.half; ty = f.dir > 0 ? VH + 2000 : -2000; }
+      else { tx = f.dir > 0 ? VW + 2000 : -2000; ty = f.laneY + Math.sin(t / 600) * 40; }
+    } else if (chasing) [tx, ty] = chaseTarget(f, t);
     else if (t > f.until || (zones[0][0] >= 0 && Math.hypot(f.tx - f.x, f.ty - f.y) < 30)) waypoint(f);
     const dx = tx - f.x, dy = ty - f.y, d = Math.hypot(dx, dy) || 1;
 
@@ -152,6 +187,8 @@
       return;
     }
 
+    // chasing, it swoops past the pointer and carries on rather than coiling round it
+    if (chasing && d < 90) { chaser = null; f.cool = t + 6000; route(f, false); }
     let diff = Math.atan2(dy, dx) - f.ang;
     diff = Math.atan2(Math.sin(diff), Math.cos(diff));
     const turn = (chasing ? f.fastTurn : f.turn) * dt;
@@ -171,9 +208,16 @@
       b.a = Math.atan2(ey, ex);
       b.x = a.x - ex / el * gap; b.y = a.y - ey / el * gap;
     }
+    // once the whole body is off screen, rest a moment, then come back the other way
+    if (!chasing && f !== chaser) {
+      const tl = segs[segs.length - 1], m = 80;
+      const gone = f.lanes ? (f.dir > 0 ? tl.y > VH + m : tl.y < -m) : (f.dir > 0 ? tl.x > VW + m : tl.x < -m);
+      if (gone) { f.hidden = true; f.next = -f.dir; f.wait = f.lanes ? rand(1.5, 5) : rand(12, 24); }
+    }
   }
 
   function drawFlier(f) {
+    if (f.hidden) return;
     if (f.kind === 'harpy') { draw(sctx, 'harpy', Math.floor(f.flap), f.x, f.y, f.right, SCALE); return; }
     // textures point up, so every part turns a quarter past its heading, and mirrors when
     // heading left so the fin stays on top
@@ -325,7 +369,7 @@
   let last = performance.now(), groundOn = false;
   function frame(t) {
     const dt = Math.min(0.05, (t - last) / 1000); last = t;
-    if (chaser && t - pointer.at > 3000) { waypoint(chaser); chaser = null; }
+    if (chaser && t - pointer.at > 3000) { release(chaser); chaser = null; }
     sctx.clearRect(0, 0, VW, VH);
     for (const f of fliers) { stepFlier(f, dt, t); drawFlier(f); }
     if (groundOn) {
@@ -343,7 +387,11 @@
   }
   function drawStill() {
     sctx.clearRect(0, 0, VW, VH);
-    fliers.forEach((f) => { if (f.segs) for (let i = 0; i < 40; i++) stepFlier(f, 0.03, i * 30); drawFlier(f); });
+    fliers.forEach((f) => {
+      // held still: the wyvern rests straight along a margin, fully in view
+      if (f.segs) { f.hidden = false; layStraight(f, zones[0][0] >= 0 ? (zones[0][0] + zones[0][1]) / 2 : VW * 0.8, VH * 0.25, Math.PI / 2); }
+      drawFlier(f);
+    });
     gctx.clearRect(0, 0, GW, GH);
     walkers.forEach(drawWalker);
   }
@@ -356,7 +404,7 @@
 
     addEventListener('resize', () => {
       layoutSky(); layoutGround();
-      fliers.forEach((f) => { if (f.x > VW + 200 || f.y > VH) place(f); });
+      fliers.forEach((f) => { if (!f.segs && (f.x > VW + 200 || f.y > VH)) place(f); });
       walkers.forEach((w) => { if (w.x > GW - 30) w.x = GW - 30; });
       if (still) drawStill();
     });
@@ -368,7 +416,7 @@
       if (!chaser) {
         // the nearest one notices and comes over
         let best = Infinity;
-        for (const f of fliers) { const d = Math.hypot(f.x - pointer.x, f.y - pointer.y); if (d < best) { best = d; chaser = f; } }
+        for (const f of fliers) { if (f.hidden || (f.cool && performance.now() < f.cool)) continue; const d = Math.hypot(f.x - pointer.x, f.y - pointer.y); if (d < best) { best = d; chaser = f; } }
       }
     }
     // a mouse calls them by moving; a finger only by tapping, so scrolling never does
