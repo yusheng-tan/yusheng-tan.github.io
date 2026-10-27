@@ -33,6 +33,7 @@
 
   /* venue badges, coloured like item rarity */
   --color-r-green: oklch(50% 0.14 148); --color-r-blue: oklch(48% 0.15 258); --color-r-grey: oklch(50% 0.03 60);
+  --color-r-gold: oklch(74% 0.15 82); --color-r-purple: oklch(50% 0.17 325);
 
   --font-display: "Press Start 2P", ui-monospace, monospace;
   --font-body: "Atkinson Hyperlegible", ui-sans-serif, system-ui, sans-serif;
