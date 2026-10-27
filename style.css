@@ -325,12 +325,14 @@ a.pub-title:active { color: var(--color-ink); }
   .items { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-sm); }
   .item { padding: var(--space-md) var(--space-xs); }
   .slot-item { width: 52px; height: 52px; }
-  :root { --hud-h: 64px; }
+  :root { --hud-h: 104px; }
   .plank { flex-wrap: nowrap; padding: var(--space-xs); }
   .wordmark { display: none; }
-  .plank nav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; width: 100%; justify-content: flex-start; }
-  .plank nav::-webkit-scrollbar { display: none; }
-  .plank nav a { flex: none; }
+  /* phones: all four sections visible at once, two by two */
+  .plank nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2xs); width: 100%; }
+  .plank nav a { display: grid; place-items: center; min-height: 36px; padding: var(--space-2xs); text-align: center; }
+  .px-btn-sm { min-height: 40px; padding-inline: var(--space-md); }
+  .ground-text a { display: inline-block; padding-block: var(--space-xs); }
   .window { margin-bottom: var(--space-lg); }
   .window img { aspect-ratio: 2 / 1; }
   h2 { font-size: 0.9375rem; }
