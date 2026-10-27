@@ -4,7 +4,7 @@
 /* Hallmark · pre-emit critique: P4 H4 E4 S5 R3 V5 · weakest: R, the game frame is decoration by design; kept frames to panels and buttons, text stays plain on parchment */
 /* Hallmark · answered F4 · both actions are Stardew-style pixel buttons by request; Email is red, Scholar is parchment so the primary still reads first */
 /* Hallmark · dismissed 40 · body ink is never set on the sky; every line of text sits on parchment, wood or dirt, each with its own ink */
-@import url("./tokens.css?v=1100e33c");
+@import url("./tokens.css?v=5d050ff3");
 @import url("./base.css?v=e9862c24");
 
 html { scroll-padding-top: calc(var(--hud-h) + var(--space-lg)); scroll-behavior: smooth; }
