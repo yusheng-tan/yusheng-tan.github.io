@@ -66,9 +66,9 @@ body {
 .cloud-16 { top: 700px; right: 5%; animation: drift 182s linear infinite alternate-reverse; }
 .cloud-17 { top: 900px; left: 7%; animation: drift 189s linear infinite alternate; }
 .cloud-18 { top: 950px; right: 8%; animation: drift 196s linear infinite alternate-reverse; }
-/* Terraria trees standing on the grass, behind the panels; the script sets size and place */
+/* Terraria-style trees (drawn by imgsrc/make_trees.py) standing on the grass behind the panels;
+   the script sets their size and place */
 .tree { position: absolute; image-rendering: pixelated; }
-.tree-flip { scale: -1 1; }
 @keyframes drift { from { translate: -60px 0; } to { translate: 60px 0; } }
 @keyframes drift-far { from { translate: -25px 0; } to { translate: 25px 0; } }
 @media (prefers-reduced-motion: reduce) { .cloud { animation: none; } }

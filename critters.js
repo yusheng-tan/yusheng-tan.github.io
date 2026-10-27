@@ -208,13 +208,16 @@
   function plantTrees() {
     const trees = [...document.querySelectorAll('.tree')];
     const foot = ground.parentElement.getBoundingClientRect();
-    const spots = GW < 768 ? [0.06, 0.9] : [0.04, 0.84, 0.94];
+    // in the open sky beside the panels: one per margin, a second on the right when there is room
+    const L = panel.l + 12, R = panel.r - 12;
+    const spots = !wide ? [GW * 0.07, GW * 0.9]
+      : GW - R > 320 ? [L / 2, R + (GW - R) * 0.3, R + (GW - R) * 0.72] : [L / 2, (R + GW) / 2];
     trees.forEach((t, i) => {
       t.hidden = i >= spots.length;
       if (t.hidden) return;
       const w = t.naturalWidth * G, h = t.naturalHeight * G;
       t.style.width = w + 'px'; t.style.height = h + 'px';
-      t.style.left = Math.round(GW * spots[i] - w / 2 + scrollX) + 'px';
+      t.style.left = Math.round(spots[i] - w / 2 + scrollX) + 'px';
       t.style.top = Math.round(foot.top + scrollY - h + 10) + 'px';
     });
   }
