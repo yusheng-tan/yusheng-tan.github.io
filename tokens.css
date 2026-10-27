@@ -16,6 +16,7 @@
   --color-grass-light: oklch(78% 0.17 132); --color-grass: oklch(64% 0.17 138); --color-grass-dark: oklch(49% 0.14 145);
   --color-dirt-light: oklch(55% 0.09 58); --color-dirt: oklch(45% 0.08 52); --color-dirt-dark: oklch(35% 0.065 48);
   --color-stone: oklch(58% 0.012 250); --color-stone-dark: oklch(45% 0.012 250);
+  --color-water: oklch(60% 0.13 245); --color-water-light: oklch(78% 0.09 230); --color-water-dark: oklch(48% 0.13 252);
 
   /* UI: wood frames, parchment panels, inventory slots */
   --color-wood-light: oklch(64% 0.11 62); --color-wood: oklch(47% 0.09 50); --color-wood-dark: oklch(31% 0.065 45);

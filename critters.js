@@ -73,6 +73,20 @@
     wide = zones.length > 0;
     // no room beside the panels (phones): rest just off screen between visits
     if (!wide) zones.push([-160, -120], [VW + 120, VW + 160]);
+    placeIsle();
+  }
+  // the sky island floats beside the hero, its inner part tucked behind the panel and its
+  // waterfall spilling into the open sky; phones have no sky beside the panels
+  function placeIsle() {
+    const isle = document.querySelector('.isle');
+    if (!isle) return;
+    isle.hidden = !wide;
+    if (!wide) return;
+    const u = 2 * SCALE, w = 80 * u;
+    const hero = document.querySelector('.hero').getBoundingClientRect();
+    isle.style.setProperty('--u', u + 'px');
+    isle.style.left = Math.round(Math.max(8, panel.l + 12 - w * 0.6) + scrollX) + 'px';
+    isle.style.top = Math.round(hero.top + scrollY + hero.height * 0.35) + 'px';
   }
   const skyTop = () => Math.max(hudBottom + 50, 70);
   // stay in the sky: above the grass once the ground scrolls into view

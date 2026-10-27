@@ -4,7 +4,7 @@
 /* Hallmark · pre-emit critique: P4 H4 E4 S5 R3 V5 · weakest: R, the game frame is decoration by design; kept frames to panels and buttons, text stays plain on parchment */
 /* Hallmark · answered F4 · both actions are Stardew-style pixel buttons by request; Email is red, Scholar is parchment so the primary still reads first */
 /* Hallmark · dismissed 40 · body ink is never set on the sky; every line of text sits on parchment, wood or dirt, each with its own ink */
-@import url("./tokens.css?v=336b648f");
+@import url("./tokens.css?v=e6b9a17b");
 @import url("./base.css?v=e9862c24");
 
 /* no sideways bounce or swipe: the page only scrolls up and down */
@@ -57,7 +57,28 @@ body {
 .cloud-6 { top: 1900px; left: 4%; transform: scale(0.85); animation: drift 100s linear infinite alternate; }
 .cloud-7 { top: 2500px; right: 5%; transform: scale(0.65); animation: drift 140s linear infinite alternate-reverse; }
 @keyframes drift { from { translate: -40px 0; } to { translate: 40px 0; } }
-@media (prefers-reduced-motion: reduce) { .cloud { animation: none; } }
+/* sky island with a waterfall, beside the hero on wide screens; --u is one art pixel, set with
+   the critters' scale, and the script places it so its inner part tucks behind the panel */
+.isle { position: absolute; width: calc(80 * var(--u, 3px)); isolation: isolate; }
+.isle-art { display: block; width: 100%; height: auto; }
+.i-grass { fill: var(--color-grass); } .i-grass-light { fill: var(--color-grass-light); } .i-grass-dark { fill: var(--color-grass-dark); }
+.i-dirt { fill: var(--color-dirt); } .i-dirt-light { fill: var(--color-dirt-light); } .i-dirt-dark { fill: var(--color-dirt-dark); }
+.i-stone { fill: var(--color-stone); } .i-cloud { fill: var(--color-cloud); } .i-cloud-shade { fill: var(--color-cloud-shade); }
+.i-water { fill: var(--color-water); } .i-water-light { fill: var(--color-water-light); }
+.falls {
+  position: absolute; left: 0; top: calc(2 * var(--u, 3px)); z-index: -1;
+  width: calc(4 * var(--u, 3px)); height: 640px; overflow: clip;
+  background: linear-gradient(90deg, var(--color-water-dark) 0 25%, var(--color-water) 25% 70%, var(--color-water-light) 70%);
+  mask-image: linear-gradient(#000 55%, transparent);
+}
+/* light streaks running down the fall */
+.falls-flow {
+  height: calc(100% + 48px);
+  background: repeating-linear-gradient(transparent 0 28px, color-mix(in oklab, var(--color-water-light) 75%, transparent) 28px 34px, transparent 34px 48px);
+  animation: fall 0.55s linear infinite;
+}
+@keyframes fall { from { transform: translateY(-48px); } to { transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .cloud, .falls-flow { animation: none; } }
 /* critters fly behind the panels on wide screens; on phones they come over the page only when tapped */
 .sky-critters { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 .sky-critters, .ground-critters { image-rendering: pixelated; }
@@ -363,6 +384,7 @@ a.pub-title:active { color: var(--color-ink); }
   .slot-sm { width: 36px; height: 36px; }
   .tag { white-space: normal; }
   .sky-critters { z-index: 2; }
+  .isle { display: none; }
 }
 @media (max-width: 22rem) {
   h1 { font-size: 1.125rem; }
