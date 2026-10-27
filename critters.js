@@ -1,5 +1,5 @@
 // Sky and ground critters, using Terraria's own sprites (from terraria.wiki.gg) and motion modelled on
-// the game's AI: harpies and the demon eye swoop on inertia, the wyvern steers like a worm, birds,
+// the game's AI: harpies and the demon eye swoop on inertia, birds,
 // butterflies, a dragonfly and a pixie cross the sky, and on the grass slimes hop and critters wander. Pure decoration on two aria-hidden canvases; with reduced motion
 // they are drawn once and stay still.
 (() => {
@@ -18,8 +18,6 @@
     snail: [4, 'snail'], cat: [1, 'cat'], dog: [1, 'dog'], heart: [1, 'heart'],
     bird: [4, 'bird'], bluejay: [4, 'blue-jay'], cardinal: [4, 'cardinal'], monarch: [3, 'monarch'],
     sulphur: [3, 'sulphur'], dragonfly: [4, 'dragonfly'], pixie: [4, 'pixie'], eye: [2, 'demon-eye'],
-    head: [1, 'wyvern-head'], legs: [1, 'wyvern-legs'], body: [1, 'wyvern-body'],
-    body2: [1, 'wyvern-body-2'], body3: [1, 'wyvern-body-3'], tail: [1, 'wyvern-tail'],
   };
   const img = {};
   const load = Object.entries(SHEETS).map(([key, [frames, file]]) => new Promise((done) => {
@@ -153,125 +151,6 @@
     if (c.x < -80 || c.x > VW + 80) { c.hidden = true; c.wait = wide ? rand(4, 14) : rand(12, 26); }
   }
 
-  // Wyvern (worm AI): the head flies at a near constant speed and can only turn so fast, and the
-  // body follows. Fifteen segments as in the game: head, body, legs, six bodies, legs, two bodies,
-  // then the three tail pieces; GAPS are centre-to-centre distances measured off the wiki's
-  // full-length picture.
-  const WYVERN = ['head', 'body', 'legs', 'body', 'body', 'body', 'body', 'body', 'body', 'legs', 'body', 'body', 'body2', 'body3', 'tail'];
-  const GAPS = [0, 62, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 39, 38, 66];
-  const I2 = WYVERN.indexOf('body2'), I3 = WYVERN.indexOf('body3'), IT = WYVERN.indexOf('tail');
-  // where the spine runs across each texture (the legs and head are wider on one side)
-  const SPINE = { head: 20, legs: 16, body: 16, body2: 14, body3: 10, tail: 6 };
-  function makeWyvern() {
-    const segs = WYVERN.map((key) => ({ key, x: 0, y: 0, a: 0 }));
-    return { kind: 'wyvern', x: 0, y: 0, ang: 0, v: 150, turn: 1.0, segs, hidden: true, wait: 0.4 };
-  }
-  // lay the wyvern out straight behind its head, so it never appears in a heap
-  function layStraight(f, x, y, ang) {
-    f.x = x; f.y = y; f.ang = ang;
-    let d = 0;
-    f.segs.forEach((s, i) => { d += GAPS[i] * SCALE; s.x = x - Math.cos(ang) * d; s.y = y - Math.sin(ang) * d; s.a = ang; });
-    f.left = Math.cos(ang) < -0.35;
-  }
-  // It patrols on long routes, sweeping the sky as in the game: up or down a side margin
-  // (across the screen on phones) in a gentle S until its whole body has left; then it waits
-  // a moment and comes back the other way, often on the other side.
-  function route(f, dir) {
-    f.hidden = false;
-    if (wide) {
-      const z = zones[Math.floor(Math.random() * zones.length)];
-      f.lane = (z[0] + z[1]) / 2; f.half = (z[1] - z[0]) * 0.35;
-      f.dir = dir || (Math.random() < 0.5 ? 1 : -1);
-      layStraight(f, f.lane, f.dir > 0 ? -60 : VH + 60, f.dir > 0 ? Math.PI / 2 : -Math.PI / 2);
-    } else {
-      f.laneY = rand(skyTop(), VH * 0.6);
-      f.dir = dir || (Math.random() < 0.5 ? 1 : -1);
-      layStraight(f, f.dir > 0 ? -60 : VW + 60, f.laneY, f.dir > 0 ? 0 : Math.PI);
-    }
-  }
-  function stepWyvern(f, dt, t) {
-    if (f.hidden) { f.wait -= dt; if (f.wait <= 0) route(f, f.next); return; }
-    let tx, ty;
-    if (wide) { tx = f.lane + Math.sin(t / 700) * f.half; ty = f.dir > 0 ? VH + 2000 : -2000; }
-    else { tx = f.dir > 0 ? VW + 2000 : -2000; ty = f.laneY + Math.sin(t / 600) * 40; }
-    let diff = Math.atan2(ty - f.y, tx - f.x) - f.ang;
-    diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-    const turn = f.turn * dt;
-    f.ang += Math.max(-turn, Math.min(turn, diff));
-    f.x += Math.cos(f.ang) * f.v * SCALE * dt; f.y += Math.sin(f.ang) * f.v * SCALE * dt;
-    // one facing for the whole body, switched only once the heading is clearly left or right
-    const c = Math.cos(f.ang);
-    if (c < -0.35) f.left = true; else if (c > 0.35) f.left = false;
-    const segs = f.segs;
-    segs[0].x = f.x; segs[0].y = f.y; segs[0].a = f.ang;
-    for (let i = 1; i < segs.length; i++) {
-      const a = segs[i - 1], b = segs[i];
-      const gap = GAPS[i] * SCALE;
-      const ex = a.x - b.x, ey = a.y - b.y, el = Math.hypot(ex, ey) || 1;
-      b.a = Math.atan2(ey, ex);
-      b.x = a.x - ex / el * gap; b.y = a.y - ey / el * gap;
-    }
-    // once the whole body is off screen, rest a moment, then come back the other way
-    const tl = segs[segs.length - 1], m = 80;
-    const gone = wide ? (f.dir > 0 ? tl.y > VH + m : tl.y < -m) : (f.dir > 0 ? tl.x > VW + m : tl.x < -m);
-    if (gone) { f.hidden = true; f.next = -f.dir; f.wait = wide ? rand(1.5, 5) : rand(12, 24); }
-  }
-
-  // The whole wyvern is drawn as one strip: a smooth curve from the tip of the snout through
-  // every segment centre to the tip of the tail, painted one texture row at a time with each
-  // row turned to the curve. Head, body, the narrowing bodies and the tail all bend together,
-  // so no rigid piece ever sticks out of a bend.
-  function drawWyvern(f) {
-    if (f.hidden) return;
-    const S = SCALE, segs = f.segs, n = segs.length;
-    const hd = segs[0], tl = segs[n - 1], pre = segs[n - 2];
-    const ux = tl.x - pre.x, uy = tl.y - pre.y, ul = Math.hypot(ux, uy) || 1;
-    const P = [{ x: hd.x + Math.cos(hd.a) * 50 * S, y: hd.y + Math.sin(hd.a) * 50 * S }];
-    for (const s of segs) P.push(s);
-    P.push({ x: tl.x + ux / ul * 48 * S, y: tl.y + uy / ul * 48 * S });
-    // arc length at each control point; P[i + 1] is segment i
-    const at = [0];
-    for (let k = 1; k < P.length; k++) at.push(at[k - 1] + Math.hypot(P[k].x - P[k - 1].x, P[k].y - P[k - 1].y));
-    const headEnd = 100 * S, b2 = (at[I2] + at[I2 + 1]) / 2, b3 = (at[I3] + at[I3 + 1]) / 2, tailStart = at[IT + 1] - 48 * S;
-    const fx = f.left ? -1 : 1, ROW0 = 7, PERIOD = 30;
-    let lastRow = -1;
-    for (let k = 0; k < P.length - 1; k++) {
-      const p0 = P[Math.max(0, k - 1)], p1 = P[k], p2 = P[k + 1], p3 = P[Math.min(P.length - 1, k + 2)];
-      const len = at[k + 1] - at[k], count = Math.max(1, Math.ceil(len));
-      for (let j = 0; j < count; j++) {
-        const s = at[k] + len * j / count, r = Math.floor(s / S);
-        if (r === lastRow) continue;
-        lastRow = r;
-        const t = j / count, t2 = t * t, t3 = t2 * t;
-        const x = 0.5 * (2 * p1.x + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
-        const y = 0.5 * (2 * p1.y + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
-        const dx = 0.5 * ((-p0.x + p2.x) + 2 * (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t + 3 * (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t2);
-        const dy = 0.5 * ((-p0.y + p2.y) + 2 * (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t + 3 * (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t2);
-        // which texture row lies here, counting from the snout
-        let key, row;
-        if (s < headEnd) { key = 'head'; row = r; }
-        else if (s < tailStart) {
-          key = s < b2 ? 'body' : s < b3 ? 'body2' : 'body3';
-          row = ROW0 + (r - Math.floor(headEnd / S)) % PERIOD;
-        } else { key = 'tail'; row = Math.min(95, r - Math.floor(tailStart / S)); }
-        const tex = img[key]; if (!tex) continue;
-        // rows run snout to tail, so the texture's "up" points back along the curve
-        const a = Math.atan2(-dy, -dx) + Math.PI / 2, c = Math.cos(a), sn = Math.sin(a);
-        sctx.setTransform(dpr * c * fx, dpr * sn * fx, -dpr * sn, dpr * c, dpr * x, dpr * y);
-        sctx.drawImage(tex.im, 0, row, tex.w, 1, -SPINE[key] * S, -0.3 * S, tex.w * S, 1.6 * S);
-      }
-    }
-    // the legs hang from the strip: only the leg itself, beside the spine
-    const legs = img.legs;
-    if (legs) for (const sg of segs) {
-      if (sg.key !== 'legs') continue;
-      const a = sg.a + Math.PI / 2, c = Math.cos(a), sn = Math.sin(a), cut = 32;
-      sctx.setTransform(dpr * c * fx, dpr * sn * fx, -dpr * sn, dpr * c, dpr * sg.x, dpr * sg.y);
-      sctx.drawImage(legs.im, cut, 0, legs.w - cut, legs.h, (cut - SPINE.legs) * S, -legs.h * S / 2, (legs.w - cut) * S, legs.h * S);
-    }
-    sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }
-
   function stepWanderer(f, dt, t) {
     if (t > f.until || (wide && Math.hypot(f.tx - f.x, f.ty - f.y) < 30)) waypoint(f);
     const dx = f.tx - f.x, dy = f.ty - f.y, d = Math.hypot(dx, dy) || 1;
@@ -287,12 +166,10 @@
     if (f.vx > 12) f.right = true; else if (f.vx < -12) f.right = false;
   }
   function stepFlier(f, dt, t) {
-    if (f.kind === 'wyvern') stepWyvern(f, dt, t);
-    else if (f.kind === 'cross') stepCrosser(f, dt, t);
+    if (f.kind === 'cross') stepCrosser(f, dt, t);
     else stepWanderer(f, dt, t);
   }
   function drawFlier(f) {
-    if (f.kind === 'wyvern') { drawWyvern(f); return; }
     if (f.hidden) return;
     if (f.kind === 'cross') { draw(sctx, f.key, Math.floor(f.frame), f.x, f.y, f.dir > 0, SCALE); return; }
     if (f.key === 'eye') {
@@ -418,8 +295,6 @@
   function drawStill() {
     sctx.clearRect(0, 0, VW, VH);
     fliers.forEach((f) => {
-      // held still: the wyvern rests straight along a margin, fully in view
-      if (f.segs) { f.hidden = false; layStraight(f, wide ? (zones[0][0] + zones[0][1]) / 2 : VW * 0.8, VH * 0.25, Math.PI / 2); }
       if (f.kind === 'cross') return;
       drawFlier(f);
     });
@@ -430,7 +305,7 @@
   Promise.all(load).then(() => {
     layoutSky(); layoutGround();
     // phones get a smaller flock, since there everything flies over the text
-    fliers.push(makeWanderer('harpy'), makeWyvern());
+    fliers.push(makeWanderer('harpy'));
     if (wide) fliers.push(makeWanderer('harpy'), makeWanderer('eye'));
     for (const c of CROSSERS) if (wide || c.phone) fliers.push(makeCrosser(c));
     fliers.forEach(place);
