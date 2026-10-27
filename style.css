@@ -44,39 +44,34 @@ body {
 
 /* ── sky ── */
 .sky { position: absolute; inset: 0; overflow: clip; pointer-events: none; z-index: 0; }
+/* Terraria's sky clouds, layered by distance as in the game: far ones small, pale and slow,
+   near ones full size and quicker; gathered on both sides of the upper page */
 .cloud { position: absolute; image-rendering: pixelated; }
-.cloud-1 { top: 40px; left: 3%; animation: drift 107s linear infinite alternate; }
-.cloud-2 { top: 150px; right: 4%; animation: drift 124s linear infinite alternate-reverse; }
-.cloud-3 { top: 330px; left: 8%; animation: drift 141s linear infinite alternate; }
-.cloud-4 { top: 520px; right: 2%; animation: drift 158s linear infinite alternate-reverse; }
-.cloud-5 { top: 760px; left: 1%; animation: drift 105s linear infinite alternate; }
-.cloud-6 { top: 980px; right: 6%; animation: drift 122s linear infinite alternate-reverse; }
-.cloud-7 { top: 1200px; left: 5%; animation: drift 139s linear infinite alternate; }
-.cloud-8 { top: 1450px; right: 3%; animation: drift 156s linear infinite alternate-reverse; }
-.cloud-9 { top: 1700px; left: 2%; animation: drift 103s linear infinite alternate; }
-.cloud-10 { top: 1950px; right: 5%; animation: drift 120s linear infinite alternate-reverse; }
-.cloud-11 { top: 2200px; left: 6%; animation: drift 137s linear infinite alternate; }
-.cloud-12 { top: 2450px; right: 2%; animation: drift 154s linear infinite alternate-reverse; }
-.cloud-13 { top: 2700px; left: 3%; animation: drift 101s linear infinite alternate; }
-.cloud-14 { top: 2950px; right: 6%; animation: drift 118s linear infinite alternate-reverse; }
-@keyframes drift { from { translate: -40px 0; } to { translate: 40px 0; } }
-/* Terraria sky island (cut from the wiki's screenshot) floating above the grass, fully in view;
-   the script sizes and places it and its waterfall, which pours from a pond to the grass */
-.isle { position: absolute; z-index: 0; isolation: isolate; pointer-events: none; }
-.isle-art { display: block; width: 100%; height: auto; image-rendering: pixelated; }
-.falls {
-  position: absolute; z-index: -1; overflow: clip;
-  background: color-mix(in oklab, var(--color-water) 70%, transparent);
-  box-shadow: inset 2px 0 0 var(--color-water-dark), inset -2px 0 0 var(--color-water-light);
-}
-/* light streaks running down the fall */
-.falls-flow {
-  height: calc(100% + 48px);
-  background: repeating-linear-gradient(transparent 0 20px, color-mix(in oklab, var(--color-water-light) 80%, transparent) 20px 26px, transparent 26px 48px);
-  animation: fall 0.55s linear infinite;
-}
-@keyframes fall { from { transform: translateY(-48px); } to { transform: translateY(0); } }
-@media (prefers-reduced-motion: reduce) { .cloud, .falls-flow { animation: none; } }
+.cloud.far { scale: 0.6; opacity: 0.55; animation-name: drift-far; }
+.cloud-1 { top: 30px; left: 12%; animation: drift-far 163s linear infinite alternate; }
+.cloud-2 { top: 140px; right: 14%; animation: drift-far 176s linear infinite alternate-reverse; }
+.cloud-3 { top: 260px; left: 2%; animation: drift-far 189s linear infinite alternate; }
+.cloud-4 { top: 380px; right: 4%; animation: drift-far 202s linear infinite alternate-reverse; }
+.cloud-5 { top: 520px; left: 10%; animation: drift-far 215s linear infinite alternate; }
+.cloud-6 { top: 610px; right: 12%; animation: drift-far 228s linear infinite alternate-reverse; }
+.cloud-7 { top: 760px; left: 4%; animation: drift-far 241s linear infinite alternate; }
+.cloud-8 { top: 860px; right: 3%; animation: drift-far 254s linear infinite alternate-reverse; }
+.cloud-9 { top: 60px; left: 1%; animation: drift 133s linear infinite alternate; }
+.cloud-10 { top: 10px; right: 2%; animation: drift 140s linear infinite alternate-reverse; }
+.cloud-11 { top: 200px; right: 7%; animation: drift 147s linear infinite alternate; }
+.cloud-12 { top: 300px; left: 6%; animation: drift 154s linear infinite alternate-reverse; }
+.cloud-13 { top: 430px; left: 0%; animation: drift 161s linear infinite alternate; }
+.cloud-14 { top: 470px; right: 0%; animation: drift 168s linear infinite alternate-reverse; }
+.cloud-15 { top: 640px; left: 3%; animation: drift 175s linear infinite alternate; }
+.cloud-16 { top: 700px; right: 5%; animation: drift 182s linear infinite alternate-reverse; }
+.cloud-17 { top: 900px; left: 7%; animation: drift 189s linear infinite alternate; }
+.cloud-18 { top: 950px; right: 8%; animation: drift 196s linear infinite alternate-reverse; }
+/* Terraria trees standing on the grass, behind the panels; the script sets size and place */
+.tree { position: absolute; image-rendering: pixelated; }
+.tree-flip { scale: -1 1; }
+@keyframes drift { from { translate: -60px 0; } to { translate: 60px 0; } }
+@keyframes drift-far { from { translate: -25px 0; } to { translate: 25px 0; } }
+@media (prefers-reduced-motion: reduce) { .cloud { animation: none; } }
 /* critters fly behind the panels on wide screens; on phones they come over the page only when tapped */
 .sky-critters { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 .sky-critters, .ground-critters { image-rendering: pixelated; }
@@ -178,7 +173,7 @@ h2 {
   box-shadow: 0 0 0 var(--px) var(--color-wood);
 }
 /* fixed ratio: the photo scales, it never re-crops */
-.window img { width: 100%; height: auto; aspect-ratio: 6 / 1; object-fit: cover; object-position: 50% 60%; }
+.window img { width: 100%; height: auto; aspect-ratio: 7 / 2; object-fit: cover; object-position: 50% 55%; }
 
 .intro { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: var(--space-xl); align-items: start; }
 .slot-portrait { padding: calc(2 * var(--px)); }

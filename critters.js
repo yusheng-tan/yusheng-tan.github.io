@@ -73,29 +73,6 @@
     wide = zones.length > 0;
     // no room beside the panels (phones): rest just off screen between visits
     if (!wide) zones.push([-160, -120], [VW + 120, VW + 160]);
-    placeIsle();
-  }
-  // The sky island floats in open sky above the grass, fully in view: on wide screens at half
-  // the screenshot's size (each art pixel one CSS pixel), on phones fitted to the width. Its
-  // waterfall pours from the pond on its left down onto the grass, and the footer makes room
-  // so the island never meets the last panel.
-  function placeIsle() {
-    const isle = document.querySelector('.isle');
-    if (!isle) return;
-    const foot = ground.parentElement, W = foot.clientWidth, z = wide ? zoom() : 1;
-    const s = wide ? Math.min(Math.max(0.5, Math.round(z) / 2), (W * 0.62) / 1390) : Math.min(1, (W - 24) / 1390);
-    const w = Math.round(1390 * s), h = Math.round(512 * s), gap = Math.round(56 * z);
-    isle.hidden = false;
-    isle.style.width = w + 'px';
-    isle.style.left = Math.round(wide ? W * 0.06 : (W - w) / 2) + 'px';
-    isle.style.bottom = `calc(100% + ${gap}px)`;
-    const falls = isle.querySelector('.falls'), fy = 362 * s;
-    falls.style.left = Math.round(224 * s) + 'px';
-    falls.style.top = Math.round(fy) + 'px';
-    falls.style.width = Math.max(6, Math.round(20 * s)) + 'px';
-    falls.style.height = Math.round(h - fy + gap + 8) + 'px';
-    const pad = parseFloat(getComputedStyle(document.querySelector('main')).paddingBottom) * z;
-    foot.style.marginTop = Math.max(0, Math.round(h + gap + 24 - pad)) + 'px';
   }
   const skyTop = () => Math.max(hudBottom + 50, 70);
   // stay in the sky: above the grass once the ground scrolls into view
@@ -225,6 +202,21 @@
     G = unitScale();
     GH = Math.round(200 * G / 1.5);
     gctx = fit(ground, GW, GH);
+    plantTrees();
+  }
+  // trees stand with their roots just under the grass, at the critters' scale, toward the edges
+  function plantTrees() {
+    const trees = [...document.querySelectorAll('.tree')];
+    const foot = ground.parentElement.getBoundingClientRect();
+    const spots = GW < 768 ? [0.06, 0.9] : [0.04, 0.84, 0.94];
+    trees.forEach((t, i) => {
+      t.hidden = i >= spots.length;
+      if (t.hidden) return;
+      const w = t.naturalWidth * G, h = t.naturalHeight * G;
+      t.style.width = w + 'px'; t.style.height = h + 'px';
+      t.style.left = Math.round(GW * spots[i] - w / 2 + scrollX) + 'px';
+      t.style.top = Math.round(foot.top + scrollY - h + 10) + 'px';
+    });
   }
   // one of each, as the game would have them: walk frames, pixels walked per frame (so feet never
   // slide), walking speed in px/s, how long they wander and rest, and which way the art faces.
@@ -333,6 +325,8 @@
     for (const c of CROSSERS) if (wide || c.phone) fliers.push(makeCrosser(c));
     fliers.forEach(place);
     makeWalkers();
+    // the page can grow after fonts load; keep the trees rooted on the grass
+    new ResizeObserver(plantTrees).observe(document.body);
 
     addEventListener('resize', () => {
       layoutSky(); layoutGround();

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Press+Start+2P&display=swap">
-<link rel="stylesheet" href="style.css?v=3b234d4b">
+<link rel="stylesheet" href="style.css?v=e05954a2">
 <script>
 // past 1440 px the whole page scales with the window, so wide screens and zoomed-out browsers
 // see the same composition instead of a narrow strip in a sea of sky
@@ -27,20 +27,27 @@
 <body>
 
 <div class="sky" aria-hidden="true">
-  <img class="cloud cloud-1" src="img/critters/cloud-2.png" width="195" height="90" alt="">
-  <img class="cloud cloud-2" src="img/critters/cloud-1.png" width="128" height="42" alt="">
-  <img class="cloud cloud-3" src="img/critters/cloud-4.png" width="209" height="47" alt="">
-  <img class="cloud cloud-4" src="img/critters/cloud-7.png" width="238" height="72" alt="">
-  <img class="cloud cloud-5" src="img/critters/cloud-3.png" width="181" height="44" alt="">
-  <img class="cloud cloud-6" src="img/critters/cloud-5.png" width="127" height="52" alt="">
-  <img class="cloud cloud-7" src="img/critters/cloud-6.png" width="139" height="44" alt="">
-  <img class="cloud cloud-8" src="img/critters/cloud-2.png" width="195" height="90" alt="">
-  <img class="cloud cloud-9" src="img/critters/cloud-4.png" width="209" height="47" alt="">
-  <img class="cloud cloud-10" src="img/critters/cloud-1.png" width="128" height="42" alt="">
-  <img class="cloud cloud-11" src="img/critters/cloud-7.png" width="238" height="72" alt="">
-  <img class="cloud cloud-12" src="img/critters/cloud-3.png" width="181" height="44" alt="">
-  <img class="cloud cloud-13" src="img/critters/cloud-5.png" width="127" height="52" alt="">
-  <img class="cloud cloud-14" src="img/critters/cloud-6.png" width="139" height="44" alt="">
+  <img class="cloud far cloud-1" src="img/critters/cloud-3.png" width="181" height="44" alt="">
+  <img class="cloud far cloud-2" src="img/critters/cloud-6.png" width="139" height="44" alt="">
+  <img class="cloud far cloud-3" src="img/critters/cloud-1.png" width="128" height="42" alt="">
+  <img class="cloud far cloud-4" src="img/critters/cloud-5.png" width="127" height="52" alt="">
+  <img class="cloud far cloud-5" src="img/critters/cloud-4.png" width="209" height="47" alt="">
+  <img class="cloud far cloud-6" src="img/critters/cloud-3.png" width="181" height="44" alt="">
+  <img class="cloud far cloud-7" src="img/critters/cloud-6.png" width="139" height="44" alt="">
+  <img class="cloud far cloud-8" src="img/critters/cloud-1.png" width="128" height="42" alt="">
+  <img class="cloud near cloud-9" src="img/critters/cloud-2.png" width="195" height="90" alt="">
+  <img class="cloud near cloud-10" src="img/critters/cloud-7.png" width="238" height="72" alt="">
+  <img class="cloud near cloud-11" src="img/critters/cloud-4.png" width="209" height="47" alt="">
+  <img class="cloud near cloud-12" src="img/critters/cloud-1.png" width="128" height="42" alt="">
+  <img class="cloud near cloud-13" src="img/critters/cloud-5.png" width="127" height="52" alt="">
+  <img class="cloud near cloud-14" src="img/critters/cloud-2.png" width="195" height="90" alt="">
+  <img class="cloud near cloud-15" src="img/critters/cloud-6.png" width="139" height="44" alt="">
+  <img class="cloud near cloud-16" src="img/critters/cloud-3.png" width="181" height="44" alt="">
+  <img class="cloud near cloud-17" src="img/critters/cloud-7.png" width="238" height="72" alt="">
+  <img class="cloud near cloud-18" src="img/critters/cloud-4.png" width="209" height="47" alt="">
+  <img class="tree" src="img/critters/tree-1.png" width="62" height="182" alt="" hidden>
+  <img class="tree" src="img/critters/tree-2.png" width="80" height="230" alt="" hidden>
+  <img class="tree tree-flip" src="img/critters/tree-2.png" width="80" height="230" alt="" hidden>
 </div>
 
 <canvas class="sky-critters" aria-hidden="true"></canvas>
@@ -62,7 +69,7 @@
     <figure class="window">
       <picture>
         <source media="(max-width: 48rem)" srcset="img/kyoto-narrow.jpg" width="1200" height="600">
-        <img src="img/kyoto-wide.jpg" width="2400" height="600" alt="Grey tiled rooftops on the slope below Kiyomizu-dera, Kyoto, with the city and clouded mountains behind.">
+        <img src="img/kyoto-wide.jpg" width="2400" height="800" alt="Grey tiled rooftops on the slope below Kiyomizu-dera, Kyoto, with the city and clouded mountains behind.">
       </picture>
     </figure>
     <div class="intro">
@@ -71,7 +78,7 @@
       </div>
       <div class="intro-text">
         <h1 id="name">Yusheng Tan</h1>
-        <p class="role">Research Assistant, University of Chicago</p>
+        <p class="role">Research Assistant, The University of Chicago</p>
         <p class="lede">I am a Research Assistant at the University of Chicago, working with <a href="https://profiles.uchicago.edu/profiles/display/83727079">Prof. Guihong Wan</a> on language-model agents that turn wearable data into personal health guidance. I received my M.S. in Computer Science from Washington University in St. Louis and my B.Eng. from North China Electric Power University. Previously, I worked with <a href="https://xxlya.github.io/">Prof. Xiaoxiao Li</a> at UBC on pathology foundation models.</p>
         <div class="actions">
           <a class="px-btn" href="mailto:yushengt@uchicago.edu"><svg class="px-icon" viewBox="0 0 11 8" width="22" height="16" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect x="0" y="0" width="11" height="1"/><rect x="0" y="1" width="2" height="1"/><rect x="9" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="8" y="2" width="1" height="1"/><rect x="10" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="7" y="3" width="1" height="1"/><rect x="10" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="4" y="4" width="3" height="1"/><rect x="10" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="10" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/><rect x="0" y="7" width="11" height="1"/></svg><span>Email me</span></a>
@@ -116,7 +123,7 @@
           <li class="row row-dated">
             <p class="tag num">2026.03 to now</p>
             <div>
-              <p class="place">University of Chicago</p>
+              <p class="place">The University of Chicago</p>
               <p class="post">Research Assistant, Department of Family Medicine. Advisor: Prof. Guihong Wan</p>
               <p class="desc">LLM agents that turn wearable data from the <i>All of Us</i> program into personalized sleep guidance.</p>
             </div>
@@ -208,10 +215,6 @@
 </main>
 
 <footer class="ground">
-  <div class="isle" hidden>
-    <div class="falls"><div class="falls-flow"></div></div>
-    <img class="isle-art" src="img/critters/sky-island.png" width="1390" height="512" alt="">
-  </div>
   <svg class="terrain" width="100%" height="100%" aria-hidden="true" focusable="false" shape-rendering="crispEdges">
     <defs>
       <pattern id="grass" width="16" height="20" patternUnits="userSpaceOnUse" patternTransform="scale(2)">
@@ -274,6 +277,6 @@
   links.forEach((a) => a.addEventListener('click', () => { jumping = true; clearTimeout(settle); settle = setTimeout(() => { jumping = false; hud.classList.remove('is-hidden'); }, 1200); }));
 })();
 </script>
-<script src="critters.js?v=d846815b" defer></script>
+<script src="critters.js?v=197af8d7" defer></script>
 </body>
 </html>
