@@ -35,7 +35,7 @@
   --color-r-green: oklch(44% 0.15 145); --color-r-blue: oklch(40% 0.15 258); --color-r-grey: oklch(42% 0.04 60);
   --color-r-gold: oklch(74% 0.15 82); --color-r-purple: oklch(42% 0.17 325);
 
-  --font-display: "Pixelify Sans", ui-rounded, ui-sans-serif, sans-serif;
+  --font-display: "Press Start 2P", ui-monospace, monospace;
   --font-body: "Nunito", ui-rounded, ui-sans-serif, sans-serif;
   --font-outlier: var(--font-body);
   --radius-card: 0; --radius-pill: 0; --rule-hair: 1px; --shadow-card: none;
