@@ -175,34 +175,67 @@
 
   function drawFlier(f) {
     if (f.kind === 'harpy') { draw(sctx, 'harpy', Math.floor(f.flap), f.x, f.y, f.right, SCALE); return; }
-    // tail first, head last; textures point up, so turn them a quarter past the heading,
-    // and mirror when heading left so the fin stays on top
-    const part = (key, x, y, a) => {
-      const s = img[key]; if (!s) return;
+    // textures point up, so every part turns a quarter past its heading, and mirrors when
+    // heading left so the fin stays on top
+    const S = SCALE;
+    const place = (x, y, a) => {
       sctx.save();
-      sctx.translate(snap(x), snap(y));
+      sctx.translate(x, y);
       sctx.rotate(a + Math.PI / 2);
       if (f.left) sctx.scale(-1, 1);
-      sctx.drawImage(s.im, -SPINE[key] * SCALE, -s.h * SCALE / 2, s.w * SCALE, s.h * SCALE);
+    };
+    const whole = (key, x, y, a) => {
+      const t = img[key]; if (!t) return;
+      place(snap(x), snap(y), a);
+      sctx.drawImage(t.im, -SPINE[key] * S, -t.h * S / 2, t.w * S, t.h * S);
       sctx.restore();
     };
-    const segs = f.segs, n = segs.length, step = 8 * SCALE;
-    for (let i = n - 1; i >= 0; i--) {
-      const b = segs[i];
-      part(b.key, b.x, b.y, b.a);
-      if (i === 0) break;
-      // fill the joint toward the next part with body links every few pixels, so a bend
-      // reads as one flexible body instead of separate plates (the head and the tail's
-      // thin end cover their own joints)
-      const a = segs[i - 1];
-      const fill = a.key === 'head' || a.key === 'legs' ? 'body' : a.key;
-      const reach = b.key === 'tail' ? 0.45 : 1;
-      const dx = a.x - b.x, dy = a.y - b.y, len = Math.hypot(dx, dy);
-      for (let d = step; d < len * reach; d += step) {
-        const t = 1 - d / len;
-        part(fill, a.x - dx * t, a.y - dy * t, b.a);
+    const segs = f.segs, n = segs.length;
+    const head = segs[0], tail = segs[n - 1], last = segs[n - 2];
+
+    // The body is one band, not plates: a smooth curve through the body centres, painted a
+    // thin slice of texture at a time, each slice turned to the curve, so bends stay whole.
+    const pts = [];
+    const toward = (p, q, d) => { const dx = q.x - p.x, dy = q.y - p.y, l = Math.hypot(dx, dy) || 1; return { x: p.x + dx / l * d, y: p.y + dy / l * d }; };
+    const flat = (k) => (k === 'legs' || k === 'head' ? 'body' : k);
+    pts.push({ ...toward(segs[1], head, 30 * S), key: 'body' });          // under the neck
+    for (let i = 1; i < n - 1; i++) pts.push({ x: segs[i].x, y: segs[i].y, key: flat(segs[i].key) });
+    pts.push({ ...toward(last, tail, 22 * S), key: 'body3' });            // into the tail's root
+    whole('tail', tail.x, tail.y, tail.a);
+    const ROW0 = 7, PERIOD = 30, step = 1.5;
+    let along = 0;
+    for (let k = 0; k < pts.length - 1; k++) {
+      const p0 = pts[Math.max(0, k - 1)], p1 = pts[k], p2 = pts[k + 1], p3 = pts[Math.min(pts.length - 1, k + 2)];
+      const len = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      const count = Math.max(1, Math.ceil(len / step));
+      for (let j = 0; j < count; j++) {
+        const t = j / count, t2 = t * t, t3 = t2 * t;
+        // Catmull-Rom position and tangent
+        const x = 0.5 * (2 * p1.x + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
+        const y = 0.5 * (2 * p1.y + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
+        const tx = 0.5 * ((-p0.x + p2.x) + 2 * (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t + 3 * (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t2);
+        const ty = 0.5 * ((-p0.y + p2.y) + 2 * (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t + 3 * (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t2);
+        // the band runs from the neck (k = 0) toward the tail; the slice faces back up the curve
+        const key = t < 0.5 ? p1.key : p2.key, tex = img[key];
+        if (tex) {
+          const row = ROW0 + Math.floor(along / S) % PERIOD;
+          place(x, y, Math.atan2(-ty, -tx));
+          sctx.drawImage(tex.im, 0, row, tex.w, 1, -SPINE[key] * S, -S, tex.w * S, step + S * 1.5);
+          sctx.restore();
+        }
+        along += len / count;
       }
     }
+    // the legs hang from the band: draw only the leg itself, beside the spine
+    const legs = img.legs;
+    if (legs) for (const sg of segs) {
+      if (sg.key !== 'legs') continue;
+      place(snap(sg.x), snap(sg.y), sg.a);
+      const cut = 32;
+      sctx.drawImage(legs.im, cut, 0, legs.w - cut, legs.h, (cut - SPINE.legs) * S, -legs.h * S / 2, (legs.w - cut) * S, legs.h * S);
+      sctx.restore();
+    }
+    whole('head', head.x, head.y, head.a);
   }
 
   // ── ground ──
