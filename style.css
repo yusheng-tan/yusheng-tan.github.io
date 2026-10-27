@@ -44,39 +44,35 @@ body {
 
 /* ── sky ── */
 .sky { position: absolute; inset: 0; overflow: clip; pointer-events: none; z-index: 0; }
-.cloud { position: absolute; display: grid; }
-.cloud > svg { grid-area: 1 / 1; }
-.cl-a { fill: var(--color-cloud); }
-.cl-b { fill: var(--color-cloud-shade); }
-.cloud-1 { top: 70px; left: 4%; animation: drift 90s linear infinite alternate; }
-.cloud-2 { top: 26px; right: 8%; transform: scale(0.8); animation: drift 120s linear infinite alternate-reverse; }
-.cloud-3 { top: 300px; left: 62%; transform: scale(0.6); animation: drift 150s linear infinite alternate; }
-/* the rest drift down the side margins, behind the panels on narrow screens */
-.cloud-4 { top: 820px; left: 2%; transform: scale(0.7); animation: drift 110s linear infinite alternate-reverse; }
-.cloud-5 { top: 1320px; right: 3%; animation: drift 130s linear infinite alternate; }
-.cloud-6 { top: 1900px; left: 4%; transform: scale(0.85); animation: drift 100s linear infinite alternate; }
-.cloud-7 { top: 2500px; right: 5%; transform: scale(0.65); animation: drift 140s linear infinite alternate-reverse; }
+.cloud { position: absolute; image-rendering: pixelated; }
+.cloud-1 { top: 40px; left: 3%; animation: drift 107s linear infinite alternate; }
+.cloud-2 { top: 150px; right: 4%; animation: drift 124s linear infinite alternate-reverse; }
+.cloud-3 { top: 330px; left: 8%; animation: drift 141s linear infinite alternate; }
+.cloud-4 { top: 520px; right: 2%; animation: drift 158s linear infinite alternate-reverse; }
+.cloud-5 { top: 760px; left: 1%; animation: drift 105s linear infinite alternate; }
+.cloud-6 { top: 980px; right: 6%; animation: drift 122s linear infinite alternate-reverse; }
+.cloud-7 { top: 1200px; left: 5%; animation: drift 139s linear infinite alternate; }
+.cloud-8 { top: 1450px; right: 3%; animation: drift 156s linear infinite alternate-reverse; }
+.cloud-9 { top: 1700px; left: 2%; animation: drift 103s linear infinite alternate; }
+.cloud-10 { top: 1950px; right: 5%; animation: drift 120s linear infinite alternate-reverse; }
+.cloud-11 { top: 2200px; left: 6%; animation: drift 137s linear infinite alternate; }
+.cloud-12 { top: 2450px; right: 2%; animation: drift 154s linear infinite alternate-reverse; }
+.cloud-13 { top: 2700px; left: 3%; animation: drift 101s linear infinite alternate; }
+.cloud-14 { top: 2950px; right: 6%; animation: drift 118s linear infinite alternate-reverse; }
 @keyframes drift { from { translate: -40px 0; } to { translate: 40px 0; } }
-/* sky island with a waterfall, beside the hero on wide screens; --u is one art pixel, set with
-   the critters' scale, and the script places it so its inner part tucks behind the panel */
-.isle { position: absolute; width: calc(80 * var(--u, 3px)); isolation: isolate; }
-.isle-art { display: block; width: 100%; height: auto; }
-.i-grass { fill: var(--color-grass); } .i-grass-light { fill: var(--color-grass-light); } .i-grass-dark { fill: var(--color-grass-dark); }
-.i-dirt { fill: var(--color-dirt); } .i-dirt-light { fill: var(--color-dirt-light); } .i-dirt-dark { fill: var(--color-dirt-dark); }
-.i-stone { fill: var(--color-stone); } .i-cloud { fill: var(--color-cloud); } .i-cloud-shade { fill: var(--color-cloud-shade); }
-.i-water { fill: var(--color-water); } .i-water-light { fill: var(--color-water-light); }
+/* Terraria sky island (cut from the wiki's screenshot) floating above the grass, fully in view;
+   the script sizes and places it and its waterfall, which pours from a pond to the grass */
+.isle { position: absolute; z-index: 0; isolation: isolate; pointer-events: none; }
+.isle-art { display: block; width: 100%; height: auto; image-rendering: pixelated; }
 .falls {
-  position: absolute; left: 0; top: calc(2 * var(--u, 3px)); z-index: -1;
-  width: calc(4 * var(--u, 3px)); height: 640px; overflow: clip;
-  /* water body with a shaded left edge and a lit right edge, one art pixel each */
-  background: var(--color-water);
-  box-shadow: inset var(--u, 3px) 0 0 var(--color-water-dark), inset calc(-1 * var(--u, 3px)) 0 0 var(--color-water-light);
-  mask-image: linear-gradient(var(--color-ink) 55%, transparent);
+  position: absolute; z-index: -1; overflow: clip;
+  background: color-mix(in oklab, var(--color-water) 70%, transparent);
+  box-shadow: inset 2px 0 0 var(--color-water-dark), inset -2px 0 0 var(--color-water-light);
 }
 /* light streaks running down the fall */
 .falls-flow {
   height: calc(100% + 48px);
-  background: repeating-linear-gradient(transparent 0 28px, color-mix(in oklab, var(--color-water-light) 75%, transparent) 28px 34px, transparent 34px 48px);
+  background: repeating-linear-gradient(transparent 0 20px, color-mix(in oklab, var(--color-water-light) 80%, transparent) 20px 26px, transparent 26px 48px);
   animation: fall 0.55s linear infinite;
 }
 @keyframes fall { from { transform: translateY(-48px); } to { transform: translateY(0); } }
@@ -386,7 +382,6 @@ a.pub-title:active { color: var(--color-ink); }
   .slot-sm { width: 36px; height: 36px; }
   .tag { white-space: normal; }
   .sky-critters { z-index: 2; }
-  .isle { display: none; }
 }
 @media (max-width: 22rem) {
   h1 { font-size: 1.125rem; }
