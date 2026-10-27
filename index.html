@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Press+Start+2P&display=swap">
-<link rel="stylesheet" href="style.css?v=b3efa1c7">
+<link rel="stylesheet" href="style.css?v=9e035037">
 </head>
 <body>
 
@@ -222,6 +222,25 @@
     }
   }, { rootMargin: '-30% 0px -60% 0px' });
   map.forEach((_, id) => { const el = document.getElementById(id); if (el) io.observe(el); });
+
+  // phones: hide the top bar while scrolling down, show it again on the way up
+  const hud = document.querySelector('.hud');
+  const phone = matchMedia('(max-width: 48rem)');
+  let lastY = scrollY, jumping = false, settle;
+  addEventListener('scroll', () => {
+    const y = scrollY;
+    if (jumping) {
+      // a nav jump is still scrolling: keep the bar out of the way, then bring it back once it stops
+      clearTimeout(settle);
+      settle = setTimeout(() => { jumping = false; lastY = scrollY; hud.classList.remove('is-hidden'); }, 160);
+      return;
+    }
+    if (!phone.matches || y < 120) hud.classList.remove('is-hidden');
+    else if (y > lastY + 6) hud.classList.add('is-hidden');
+    else if (y < lastY - 6) hud.classList.remove('is-hidden');
+    lastY = y;
+  }, { passive: true });
+  links.forEach((a) => a.addEventListener('click', () => { jumping = true; clearTimeout(settle); settle = setTimeout(() => { jumping = false; hud.classList.remove('is-hidden'); }, 1200); }));
 })();
 </script>
 </body>

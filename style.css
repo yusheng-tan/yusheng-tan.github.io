@@ -319,8 +319,16 @@ a.pub-title:active { color: var(--color-ink); }
 
 @media (max-width: 48rem) {
   .panel { padding: var(--space-lg) var(--space-md); }
-  .intro { grid-template-columns: minmax(0, 1fr); gap: var(--space-lg); }
-  .slot-portrait { width: 140px; }
+  /* phones: portrait beside the name, bio and buttons full width below */
+  .intro { grid-template-columns: 96px minmax(0, 1fr); gap: var(--space-xs) var(--space-md); align-items: center; }
+  .intro-text { display: contents; }
+  .slot-portrait { grid-row: 1 / span 2; width: 96px; padding: var(--px); }
+  .intro h1 { align-self: end; }
+  .intro .role { align-self: start; margin-top: 0; font-size: var(--text-md); }
+  .intro .lede, .intro .actions { grid-column: 1 / -1; }
+  /* top bar slides away while reading, comes back on the way up */
+  .hud { transition: transform var(--dur-short) var(--ease-out); }
+  .hud.is-hidden { transform: translateY(calc(-100% - var(--space-sm))); }
   .row-dated { grid-template-columns: minmax(0, 1fr); gap: var(--space-xs); }
   .items { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-sm); }
   .item { padding: var(--space-md) var(--space-xs); }
