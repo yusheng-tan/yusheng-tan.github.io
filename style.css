@@ -4,14 +4,14 @@
 /* Hallmark · pre-emit critique: P4 H4 E4 S5 R3 V5 · weakest: R, the game frame is decoration by design; kept frames to panels and buttons, text stays plain on parchment */
 /* Hallmark · answered F4 · both actions are Stardew-style pixel buttons by request; Email is red, Scholar is parchment so the primary still reads first */
 /* Hallmark · dismissed 40 · body ink is never set on the sky; every line of text sits on parchment, wood or dirt, each with its own ink */
-@import url("./tokens.css?v=e6b9a17b");
+@import url("./tokens.css?v=ce695d8c");
 @import url("./base.css?v=e9862c24");
 
 /* no sideways bounce or swipe: the page only scrolls up and down */
 html, body { overscroll-behavior-x: none; }
 html { scroll-padding-top: calc((var(--hud-h) + var(--space-lg)) * var(--zoom, 1)); scroll-behavior: smooth; }
-/* wider screens get wider panels, so the sky frames the page instead of swallowing it */
-:root { --hud-h: 88px; --container: clamp(1040px, 80vw, 1200px); }
+/* the panels' design width; the head script scales the page so they fill about 55% of the window */
+:root { --hud-h: 88px; --container: 920px; }
 body {
   background: linear-gradient(var(--color-sky-top), var(--color-paper) 640px, var(--color-paper-2));
   background-color: var(--color-paper);
@@ -66,8 +66,8 @@ body {
 .cloud-16 { top: 700px; right: 5%; animation: drift 182s linear infinite alternate-reverse; }
 .cloud-17 { top: 900px; left: 7%; animation: drift 189s linear infinite alternate; }
 .cloud-18 { top: 950px; right: 8%; animation: drift 196s linear infinite alternate-reverse; }
-/* Terraria-style trees (drawn by imgsrc/make_trees.py) standing on the grass behind the panels;
-   the script sets their size and place */
+/* Terraria's own trees (cherry, forest, tall forest; from the wiki) standing on the grass behind
+   the panels; the script sets their size and place */
 .tree { position: absolute; image-rendering: pixelated; }
 @keyframes drift { from { translate: -60px 0; } to { translate: 60px 0; } }
 @keyframes drift-far { from { translate: -25px 0; } to { translate: 25px 0; } }
@@ -99,7 +99,7 @@ body {
 }
 .wordmark {
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 400;
   color: var(--color-parchment-hi);
   text-decoration: none;
@@ -113,7 +113,7 @@ body {
 .plank nav a {
   padding: var(--space-xs) var(--space-sm);
   font-family: var(--font-display);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 400;
   color: var(--color-parchment-hi);
   text-shadow: 1px 1px 0 var(--color-wood-dark);
@@ -187,7 +187,7 @@ h1 {
   color: var(--color-ink);
   text-shadow: 3px 3px 0 var(--color-shadow);
 }
-.role { margin-top: var(--space-sm); font-size: 1.625rem; font-weight: 800; line-height: 1.4; color: var(--color-r-green); }
+.role { margin-top: var(--space-sm); font-size: 1.375rem; font-weight: 800; line-height: 1.4; color: var(--color-r-green); }
 .lede { margin-top: var(--space-md); max-width: 64ch; color: var(--color-ink-2); line-height: 1.65; }
 .lede a, .prose a {
   color: var(--color-accent);
