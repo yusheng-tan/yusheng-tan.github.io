@@ -9,7 +9,7 @@
 
 /* no sideways bounce or swipe: the page only scrolls up and down */
 html, body { overscroll-behavior-x: none; }
-html { scroll-padding-top: calc(var(--hud-h) + var(--space-lg)); scroll-behavior: smooth; }
+html { scroll-padding-top: calc((var(--hud-h) + var(--space-lg)) * var(--zoom, 1)); scroll-behavior: smooth; }
 /* wider screens get wider panels, so the sky frames the page instead of swallowing it */
 :root { --hud-h: 88px; --container: clamp(1040px, 80vw, 1200px); }
 body {
@@ -64,6 +64,8 @@ body {
 .ground-critters { position: absolute; left: 0; bottom: calc(100% - 10px); z-index: 1; pointer-events: none; }
 
 .hud, main, .ground { position: relative; z-index: 1; }
+/* page-wide scale on wide screens, set from the window width in the head */
+.hud, main, .ground-text { zoom: var(--zoom, 1); }
 /* the top bar stays on screen so every section is one click away */
 .hud { position: sticky; top: 0; z-index: var(--z-sticky-nav); }
 

@@ -33,6 +33,9 @@
     return g;
   }
   const rand = (a, b) => a + Math.random() * (b - a);
+  // the page-wide scale set in the head; sprites follow it in half steps so their pixels stay even
+  const zoom = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--zoom')) || 1;
+  const half = (v) => Math.max(1, Math.round(v * 2) / 2);
   const snap = (v) => Math.round(v);
 
   // draw frame `i` of a sheet centred on (x, y); `right` mirrors it to face right
@@ -54,7 +57,7 @@
 
   function layoutSky() {
     VW = innerWidth; VH = innerHeight;
-    SCALE = 1;
+    SCALE = half(zoom());
     sctx = fit(sky, VW, VH);
     const p = document.querySelector('.panel').getBoundingClientRect();
     panel = { l: p.left - 12, r: p.right + 12 };
@@ -70,6 +73,14 @@
     // keep to the side it is already on, so wanderers seldom cross the page
     let z = zones.find(([a, b]) => f.x >= a - 120 && f.x <= b + 120) || zones[Math.floor(Math.random() * zones.length)];
     if (Math.random() < 0.08) z = zones[Math.floor(Math.random() * zones.length)];
+    if (zones[0][0] < 0) {
+      // no margins (phones): rest off one edge, then every so often fly across to the other
+      z = f.x < VW / 2 ? zones[1] : zones[0];
+      f.tx = rand(z[0], z[1]);
+      f.ty = rand(Math.max(hudBottom + 40, 80), VH * 0.7);
+      f.until = performance.now() + rand(14000, 28000);
+      return;
+    }
     // stay in the sky: above the grass once the ground scrolls into view
     const top = Math.max(hudBottom + 60, 80);
     const floor = Math.max(top + 60, Math.min(VH - 80, ground.parentElement.getBoundingClientRect().top - 90));
@@ -90,6 +101,9 @@
   // body links drawn a little closer so bends never open a seam on the outside of a curve
   const WYVERN = ['head', 'body', 'legs', 'body', 'body', 'body', 'body', 'legs', 'body', 'body2', 'body3', 'tail'];
   const GAPS = [0, 62, 36, 36, 36, 36, 36, 36, 36, 39, 38, 66];
+  // where the spine runs across each texture (the legs and head are wider on one side), read off
+  // the same picture; drawing every part on its spine is what joins them into one body
+  const SPINE = { head: 20, legs: 16, body: 16, body2: 14, body3: 10, tail: 6 };
   function makeWyvern() {
     const segs = WYVERN.map((key) => ({ key, x: 0, y: 0, a: 0 }));
     // wide arcs, as in the game: a turning radius near 150 px both cruising and chasing
@@ -119,7 +133,7 @@
     const chasing = f === chaser;
     let tx = f.tx, ty = f.ty;
     if (chasing) [tx, ty] = chaseTarget(f, t);
-    else if (t > f.until || Math.hypot(f.tx - f.x, f.ty - f.y) < 30) waypoint(f);
+    else if (t > f.until || (zones[0][0] >= 0 && Math.hypot(f.tx - f.x, f.ty - f.y) < 30)) waypoint(f);
     const dx = tx - f.x, dy = ty - f.y, d = Math.hypot(dx, dy) || 1;
 
     if (f.kind === 'harpy') {
@@ -169,21 +183,22 @@
       sctx.translate(snap(sg.x), snap(sg.y));
       sctx.rotate(sg.a + Math.PI / 2);
       if (f.left) sctx.scale(-1, 1);
-      sctx.drawImage(s.im, -w / 2, -h / 2, w, h);
+      sctx.drawImage(s.im, -SPINE[sg.key] * SCALE, -h / 2, w, h);
       sctx.restore();
     }
   }
 
   // ── ground ──
   let gctx, GW;
-  const GH = 200;
   // the game's textures already double every art pixel, so 1.5 draws each one as exactly 3 px
-  const G = 1.5;
+  let G = 1.5, GH = 200;
   const walkers = [];
   const hearts = [];
   const GRAVITY = 1080; // the game's 0.3 px per tick², in px/s²
   function layoutGround() {
     GW = ground.parentElement.clientWidth;
+    G = half(1.5 * zoom());
+    GH = Math.round(200 * G / 1.5);
     gctx = fit(ground, GW, GH);
   }
   function makeWalkers() {
@@ -197,11 +212,12 @@
     ];
     for (const s of spec) walkers.push({ ...s, x: rand(60, GW - 60), dir: Math.random() < 0.5 ? -1 : 1, h: 0, vy: 0, vx: 0, timer: rand(0.5, 3), moving: false, dist: 0, jumps: 0, wobble: 0 });
   }
-  function jump(w, vy, vx) { if (w.h > 0 || w.vy > 0) return; w.vy = vy; w.vx = vx; }
+  // jumps and gravity grow with the sprites, so a bigger slime hops just as high relative to itself
+  function jump(w, vy, vx) { if (w.h > 0 || w.vy > 0) return; w.vy = vy * G / 1.5; w.vx = vx; }
   function stepWalker(w, dt) {
     const airborne = w.h > 0 || w.vy > 0;
     if (airborne) {
-      w.vy -= GRAVITY * dt; w.h += w.vy * dt; w.x += w.vx * dt;
+      w.vy -= GRAVITY * G / 1.5 * dt; w.h += w.vy * dt; w.x += w.vx * dt;
       if (w.h <= 0) { w.h = 0; w.vy = 0; if (w.kind === 'slime') { w.vx = 0; w.timer = rand(1.2, 2.8); } }
     } else if (w.kind === 'slime') {
       // sit and wobble, wobble faster just before a hop; every third hop is a big one
@@ -310,7 +326,7 @@
       const x = e.clientX - ground.getBoundingClientRect().left;
       let near = null, best = 100;
       for (const w of walkers) { const d = Math.abs(w.x - x); if (d < best) { best = d; near = w; } }
-      if (near) { jump(near, 440, near.vx * 0.5); hearts.push({ x: near.x, y: GH - 110, life: 1.2 }); }
+      if (near) { jump(near, 440, near.vx * 0.5); hearts.push({ x: near.x, y: GH - 110 * G / 1.5, life: 1.2 }); }
     });
 
     new IntersectionObserver(([e]) => {

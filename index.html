@@ -9,7 +9,20 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Press+Start+2P&display=swap">
-<link rel="stylesheet" href="style.css?v=7da816e2">
+<link rel="stylesheet" href="style.css?v=4e80e3ab">
+<script>
+// past 1440 px the whole page scales with the window, so wide screens and zoomed-out browsers
+// see the same composition instead of a narrow strip in a sea of sky
+(() => {
+  const set = () => {
+    const w = innerWidth;
+    const z = w > 1440 ? Math.min(2, 1 + (w / 1440 - 1) * 0.85) : 1;
+    document.documentElement.style.setProperty('--zoom', z.toFixed(3));
+  };
+  set();
+  addEventListener('resize', set);
+})();
+</script>
 </head>
 <body>
 
@@ -250,6 +263,6 @@
   links.forEach((a) => a.addEventListener('click', () => { jumping = true; clearTimeout(settle); settle = setTimeout(() => { jumping = false; hud.classList.remove('is-hidden'); }, 1200); }));
 })();
 </script>
-<script src="critters.js?v=1069caeb" defer></script>
+<script src="critters.js?v=7e56a683" defer></script>
 </body>
 </html>
