@@ -68,8 +68,10 @@ body {
 .falls {
   position: absolute; left: 0; top: calc(2 * var(--u, 3px)); z-index: -1;
   width: calc(4 * var(--u, 3px)); height: 640px; overflow: clip;
-  background: linear-gradient(90deg, var(--color-water-dark) 0 25%, var(--color-water) 25% 70%, var(--color-water-light) 70%);
-  mask-image: linear-gradient(#000 55%, transparent);
+  /* water body with a shaded left edge and a lit right edge, one art pixel each */
+  background: var(--color-water);
+  box-shadow: inset var(--u, 3px) 0 0 var(--color-water-dark), inset calc(-1 * var(--u, 3px)) 0 0 var(--color-water-light);
+  mask-image: linear-gradient(var(--color-ink) 55%, transparent);
 }
 /* light streaks running down the fall */
 .falls-flow {
