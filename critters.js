@@ -19,12 +19,14 @@
     bird: [4, 'bird'], bluejay: [4, 'blue-jay'], cardinal: [4, 'cardinal'], monarch: [3, 'monarch'],
     sulphur: [3, 'sulphur'], dragonfly: [4, 'dragonfly'], pixie: [4, 'pixie'], eye: [2, 'demon-eye'],
   };
+  // the page hands over a version for the sprite folder, so new art never comes from cache
+  const spriteVersion = (document.currentScript && document.currentScript.dataset.v) || '';
   const img = {};
   const load = Object.entries(SHEETS).map(([key, [frames, file]]) => new Promise((done) => {
     const im = new Image();
     im.onload = () => { img[key] = { im, frames, w: im.width / frames, h: im.height }; done(); };
     im.onerror = done;
-    im.src = `img/critters/${file}.png`;
+    im.src = `img/critters/${file}.png${spriteVersion ? '?v=' + spriteVersion : ''}`;
   }));
 
   function fit(cv, w, h) {
