@@ -220,24 +220,7 @@ h1 {
 .item-name { font-family: var(--font-display); font-size: 0.8125rem; font-weight: 400; line-height: 1.6; color: var(--color-ink); }
 .item-desc { margin-top: var(--space-2xs); font-size: var(--text-sm); color: var(--color-ink-2); }
 .badge-gold { --badge: var(--color-r-gold); color: var(--color-parchment-ink); margin: var(--space-xs) 0 0; }
-.item { position: relative; }
-.quest {
-  position: absolute;
-  top: calc(-3 * var(--px));
-  right: calc(2 * var(--px));
-  display: grid;
-  place-items: center;
-  width: calc(6 * var(--px));
-  height: calc(7 * var(--px));
-  background: var(--color-r-gold);
-  color: var(--color-parchment-ink);
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  box-shadow: 0 0 0 var(--px) var(--color-wood-dark);
-  animation: bob 1.6s steps(2, end) infinite;
-}
-@keyframes bob { 50% { translate: 0 calc(-1 * var(--px)); } }
-@media (prefers-reduced-motion: reduce) { .quest { animation: none; } }
+
 
 /* ── lists: inset rows ── */
 .prose { display: grid; gap: var(--space-md); max-width: 68ch; color: var(--color-ink-2); }
