@@ -218,7 +218,7 @@ h1 {
     inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 0 var(--color-parchment-hi),
     0 0 0 var(--px) var(--color-r-gold);
 }
-.item-name { font-family: var(--font-display); font-size: 0.8125rem; font-weight: 400; line-height: 1.6; color: var(--color-ink); }
+.item-name { font-family: var(--font-body); font-size: var(--text-md); font-weight: 700; line-height: 1.35; color: var(--color-ink); }
 .badge-gold { --badge: var(--color-r-gold); color: var(--color-parchment-ink); margin: 0; }
 
 
