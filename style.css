@@ -60,6 +60,7 @@ body {
 @media (prefers-reduced-motion: reduce) { .cloud { animation: none; } }
 /* critters fly behind the panels on wide screens; on phones they come over the page only when tapped */
 .sky-critters { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.sky-critters, .ground-critters { image-rendering: pixelated; }
 .ground-critters { position: absolute; left: 0; bottom: calc(100% - 10px); z-index: 1; pointer-events: none; }
 
 .hud, main, .ground { position: relative; z-index: 1; }

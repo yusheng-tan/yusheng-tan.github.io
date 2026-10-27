@@ -201,34 +201,91 @@
   };
 
   const dpr = Math.min(devicePixelRatio || 1, 2);
+  // one art pixel is drawn as a whole number of device pixels, near `target` CSS px
+  const unit = (target) => Math.max(1, Math.round(target * dpr)) / dpr;
+
+  // tones from one token: lit edge, body, shadow side and a hue-matched outline
+  const toneCache = new Map();
+  function tone(token, kind) {
+    const key = token + kind;
+    if (toneCache.has(key)) return toneCache.get(key);
+    const raw = tok(token);
+    const m = raw.match(/oklch\(\s*([\d.]+)%\s+([\d.]+)\s+([\d.]+)/);
+    let out = raw;
+    if (m) {
+      const L = +m[1], C = +m[2], H = +m[3];
+      const mk = (l, c) => `oklch(${Math.max(8, Math.min(99, l)).toFixed(1)}% ${Math.max(0, c).toFixed(3)} ${H})`;
+      if (kind === 'hi') out = mk(L + 8, C * 0.85);
+      else if (kind === 'lo') out = mk(L - 10, C * 1.08);
+      else if (kind === 'line') out = mk(L * 0.55, Math.max(0.02, C * 1.1));
+      else if (kind === 'glint') out = mk(97, 0.01);
+    }
+    toneCache.set(key, out);
+    return out;
+  }
+
+  // Scale2x: doubles the art and rounds its stair-steps, so every shape gets twice the pixels
+  function scale2x(rows) {
+    const h = rows.length, w = Math.max(...rows.map((r) => r.length));
+    const at = (x, y) => (x < 0 || y < 0 || x >= w || y >= h ? '.' : rows[y][x] || '.');
+    const out = Array.from({ length: h * 2 }, () => []);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const P = at(x, y), A = at(x, y - 1), B = at(x + 1, y), C = at(x - 1, y), D = at(x, y + 1);
+      out[2 * y][2 * x] = C === A && C !== D && A !== B ? A : P;
+      out[2 * y][2 * x + 1] = A === B && A !== C && B !== D ? B : P;
+      out[2 * y + 1][2 * x] = D === C && D !== B && C !== A ? C : P;
+      out[2 * y + 1][2 * x + 1] = B === D && B !== A && D !== C ? D : P;
+    }
+    return out;
+  }
+
+  // surface texture inside a shape, in detail pixels: feather barbs, hair strands, straw weave, belly scales
+  const GRAIN = {
+    f: (x, y) => (x + y) % 4 === 0,
+    F: (x, y) => (x + y) % 4 === 0,
+    h: (x, y) => x % 3 === 0 && y % 2 === 0,
+    b: (x, y) => x % 3 === 0 && y % 2 === 0,
+    t: (x, y) => (x + 2 * y) % 5 === 0,
+    S: (x) => x % 3 === 0,
+    m: (x, y) => (x + y) % 3 === 0,
+  };
+
   const cache = new Map();
-  // bake a sprite at pixel size `px`, optionally mirrored and recoloured; returns {img, w, h} in CSS px
+  // bake a sprite with art pixels of `px` CSS px, optionally mirrored and recoloured; returns {img, w, h} in CSS px.
+  // Light comes from the upper left: lit pixels along the top and left edges, a two-pixel shadow along the
+  // bottom and right, eyes get a glint, and the outline takes a dark tone of the colour it borders.
   function sprite(name, px, flip = false, swap = {}, part = 'all') {
     const key = [name, px, flip, JSON.stringify(swap), part].join('|');
     if (cache.has(key)) return cache.get(key);
-    const rows = ART[name];
-    const cols = Math.max(...rows.map((r) => r.length));
-    const W = cols + 2, H = rows.length + 2;
+    const grid = scale2x(ART[name]);
+    const rows = grid.length, cols = grid[0].length;
+    const W = cols + 2, H = rows + 2, d = Math.round(px * dpr);
     const cv = document.createElement('canvas');
-    cv.width = W * px * dpr; cv.height = H * px * dpr;
+    cv.width = W * d; cv.height = H * d;
     const g = cv.getContext('2d');
-    g.scale(px * dpr, px * dpr);
-    const at = (x, y) => { const ch = (rows[y] || '')[x]; return ch && ch !== '.' ? ch : null; };
-    const X = (x) => (flip ? cols - 1 - x : x) + 1;
+    const at = (x, y) => { const ch = (grid[y] || [])[x]; return ch && ch !== '.' ? ch : null; };
+    const ink = (ch) => swap[ch] || INK[ch];
+    const put = (x, y, color) => { g.fillStyle = color; g.fillRect(((flip ? cols - 1 - x : x) + 1) * d, (y + 1) * d, d, d); };
     if (part !== 'fill') {
-      g.fillStyle = tok('--color-critter-line');
-      for (let y = -1; y <= rows.length; y++) for (let x = -1; x <= cols; x++) {
+      for (let y = -1; y <= rows; y++) for (let x = -1; x <= cols; x++) {
         if (at(x, y)) continue;
-        let near = false;
-        for (let dy = -1; dy <= 1 && !near; dy++) for (let dx = -1; dx <= 1; dx++) if (at(x + dx, y + dy)) { near = true; break; }
-        if (near) g.fillRect(X(x), y + 1, 1, 1);
+        const n = at(x, y + 1) || at(x - 1, y) || at(x + 1, y) || at(x, y - 1);
+        if (n) put(x, y, tone(ink(n), 'line'));
       }
     }
     if (part !== 'line') {
-      for (let y = 0; y < rows.length; y++) for (let x = 0; x < cols; x++) {
+      for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
         const ch = at(x, y); if (!ch) continue;
-        g.fillStyle = tok(swap[ch] || INK[ch]);
-        g.fillRect(X(x), y + 1, 1, 1);
+        const t = ink(ch);
+        let kind = 'base';
+        if (ch === 'e') kind = at(x, y - 1) !== 'e' && at(x - 1, y) !== 'e' ? 'glint' : 'base';
+        else {
+          const lit = !at(x, y - 1) || !at(x - 1, y);
+          const dark = !at(x, y + 1) || !at(x + 1, y) || !at(x, y + 2);
+          if (lit && !dark) kind = 'hi'; else if (dark && !lit) kind = 'lo';
+          else if (!lit && !dark && GRAIN[ch] && GRAIN[ch](x, y)) kind = 'lo';
+        }
+        put(x, y, kind === 'base' ? tok(t) : tone(t, kind));
       }
     }
     const out = { img: cv, w: W * px, h: H * px };
@@ -255,7 +312,8 @@
 
   function layoutSky() {
     VW = innerWidth; VH = innerHeight;
-    PX = VW < 768 ? 2 : 3;
+    // PX is one art pixel; the baked sprites carry two detail pixels per art pixel
+    PX = 2 * unit(VW < 768 ? 1 : 1.5);
     sctx = fit(sky, VW, VH);
     const p = document.querySelector('.panel').getBoundingClientRect();
     panel = { l: p.left - 12, r: p.right + 12 };
@@ -369,7 +427,7 @@
     if (f.kind === 'harpy') {
       // four-frame beat: up, level, down, level
       const frame = ['harpyUp', 'harpyMid', 'harpyDown', 'harpyMid'][Math.floor(f.flap * 4) % 4];
-      const s = sprite(frame, PX, f.face < 0);
+      const s = sprite(frame, PX / 2, f.face < 0);
       sctx.drawImage(s.img, snap(f.x - s.w / 2), snap(f.y - s.h / 2), s.w, s.h);
       return;
     }
@@ -380,18 +438,20 @@
       for (let i = n - 1; i >= 0; i--) {
         const sg = f.segs[i];
         // sprites point right; heading left, mirror top to bottom so the mane stays up
-        drawRot(sprite(name(i), PX, false, {}, part), sg.x, sg.y, sg.a, Math.cos(sg.a) < 0);
+        drawRot(sprite(name(i), PX / 2, false, {}, part), sg.x, sg.y, sg.a, Math.cos(sg.a) < 0);
       }
     }
   }
 
   // ── ground ──
   let gctx, GW;
-  const GH = 84, GPX = 3;
+  const GH = 130;
+  let GPX = 3;
   const walkers = [];
   const hearts = [];
   function layoutGround() {
     GW = ground.parentElement.clientWidth;
+    GPX = 2 * unit(GW < 768 ? 1.25 : 1.5);
     gctx = fit(ground, GW, GH);
   }
   function makeWalkers() {
@@ -437,9 +497,9 @@
     if (w.kind === 'walker') name = w.wait > 0 || w.h > 0 ? w.a : (Math.floor(t / 220) % 2 ? w.b : w.a);
     else if (w.kind === 'slime') name = w.h > 0 ? 'slimeTall' : 'slimeSquat';
     else name = w.h > 0 ? 'bunnyHop' : 'bunnySit';
-    const s = sprite(name, GPX, w.dir < 0, w.swap || {});
+    const s = sprite(name, GPX / 2, w.dir < 0, w.swap || {});
     // feet rest on the grass line at the bottom of the canvas
-    gctx.drawImage(s.img, snap(w.x - s.w / 2), snap(GH - s.h - w.h + GPX), s.w, s.h);
+    gctx.drawImage(s.img, snap(w.x - s.w / 2), snap(GH - s.h - w.h + GPX / 2), s.w, s.h);
   }
 
   // ── loop ──
@@ -455,7 +515,7 @@
       for (let i = hearts.length - 1; i >= 0; i--) {
         const h = hearts[i]; h.life -= dt; h.y -= 18 * dt;
         if (h.life <= 0) { hearts.splice(i, 1); continue; }
-        const s = sprite('heart', 2);
+        const s = sprite('heart', 1);
         gctx.drawImage(s.img, snap(h.x - s.w / 2), snap(h.y), s.w, s.h);
       }
     }
