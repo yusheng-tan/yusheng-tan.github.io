@@ -7,7 +7,8 @@
 @import url("./tokens.css?v=dfaaed7d");
 @import url("./base.css?v=e9862c24");
 
-html { scroll-padding-top: var(--space-lg); }
+html { scroll-padding-top: calc(var(--hud-h) + var(--space-lg)); scroll-behavior: smooth; }
+:root { --hud-h: 88px; }
 body {
   background: linear-gradient(var(--color-sky-top), var(--color-paper) 640px, var(--color-paper-2));
   background-color: var(--color-paper);
@@ -50,9 +51,11 @@ body {
 @media (prefers-reduced-motion: reduce) { .cloud { animation: none; } }
 
 .hud, main, .ground { position: relative; z-index: 1; }
+/* the top bar stays on screen so every section is one click away */
+.hud { position: sticky; top: 0; z-index: var(--z-sticky-nav); }
 
 /* ── top bar: wood plank ── */
-.hud { padding-top: var(--space-lg); }
+.hud { padding-top: var(--space-sm); }
 .plank {
   --panel-hi: var(--color-wood-light);
   --panel-lo: var(--color-wood-dark);
@@ -87,6 +90,7 @@ body {
 }
 .plank nav a:hover { background: var(--color-parchment); color: var(--color-parchment-ink); }
 .plank nav a:active { background: var(--color-parchment-lo); color: var(--color-parchment-ink); }
+.plank nav a[aria-current="true"] { background: var(--color-parchment); color: var(--color-parchment-ink); }
 
 /* ── panels ── */
 main { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--space-xl) + 2 * var(--px)); padding-block: var(--space-xl) var(--space-3xl); }
@@ -316,7 +320,12 @@ a.pub-title:active { color: var(--color-ink); }
   .items { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-sm); }
   .item { padding: var(--space-md) var(--space-xs); }
   .slot-item { width: 52px; height: 52px; }
-  .plank, .plank nav { justify-content: center; }
+  :root { --hud-h: 64px; }
+  .plank { flex-wrap: nowrap; padding: var(--space-xs); }
+  .wordmark { display: none; }
+  .plank nav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; width: 100%; justify-content: flex-start; }
+  .plank nav::-webkit-scrollbar { display: none; }
+  .plank nav a { flex: none; }
   .window { margin-bottom: var(--space-lg); }
   .window img { aspect-ratio: 2 / 1; }
   h2 { font-size: 0.9375rem; }
