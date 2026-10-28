@@ -481,3 +481,17 @@ a.pub-title:active { color: var(--color-ink); }
 }
 /* phones and narrow windows have no sky beside the panels to hold it */
 @media (max-width: 64rem) { .status { display: none; } }
+
+/* visitors by region: a coin and its count, the region's name on hover or focus */
+.wm-places { position: absolute; inset: 0; pointer-events: none; }
+.wm-place { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: var(--space-2xs); translate: -12px -50%; pointer-events: auto; cursor: default; }
+.wm-place img { width: 24px; height: auto; }
+.wm-place.is-home { translate: 30px -50%; }
+.wm-places { z-index: 1; }
+.wm-count { font-size: var(--text-xs); line-height: 1; }
+.wm-where { position: absolute; left: 0; top: 100%; margin-top: var(--space-2xs); font-size: var(--text-xs); white-space: nowrap; opacity: 0; transition: opacity var(--dur-micro) var(--ease-out); }
+.wm-place:hover, .wm-place:focus-visible { z-index: 1; }
+.wm-place:hover .wm-where, .wm-place:focus-visible .wm-where { opacity: 1; }
+.wm-place:focus-visible { outline: 2px solid var(--color-hud-text); outline-offset: 2px; }
+.wm-total { position: absolute; left: var(--space-md); top: var(--space-md); margin: 0; font-size: var(--text-sm); }
+@media (prefers-reduced-motion: reduce) { .wm-where { transition: none; } }

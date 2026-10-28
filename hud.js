@@ -1,13 +1,12 @@
 // The status corner, read like Terraria's info accessories: the watch tells Chicago's time, the
-// compass where that is, and the depth meter how far the view is above the grass. The minimap
-// opens into the full world map, as the game's M key does.
+// compass where that is, and the weather radio its temperature. The minimap opens into the full
+// world map, as the game's M key does, where coins mark how many visitors came from each region.
 (() => {
   const status = document.querySelector('.status');
   if (!status) return;
   const out = {};
   status.querySelectorAll('[data-info]').forEach((el) => { out[el.dataset.info] = el; });
   const set = (k, text) => { if (out[k] && out[k].textContent !== text) out[k].textContent = text; };
-  const zoom = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--zoom')) || 1;
 
   // ── only where there is sky enough beside the panels ──
   const panel = document.querySelector('.panel');
@@ -48,7 +47,7 @@
   const view = dlg.querySelector('.wm-view');
   const full = dlg.querySelector('.wm-world');
   const me = dlg.querySelector('.wm-me');
-  let fs = 1, fx = 0, fy = 0, fitS = 1;
+  let fs = 1, fx = 0, fy = 0, fitS = 1, coins = [];
   function place() {
     // keep some of the world on screen whichever way it is dragged
     const w = TW * fs, h = TH * fs, vw = view.clientWidth, vh = view.clientHeight;
@@ -56,6 +55,7 @@
     fy = h <= vh ? (vh - h) / 2 : Math.min(0, Math.max(vh - h, fy));
     full.style.transform = `translate(${fx}px, ${fy}px) scale(${fs})`;
     me.style.transform = `translate(${fx + CX * fs}px, ${fy + CY * fs}px)`;
+    for (const c of coins) c.el.style.transform = `translate(${fx + c.x * fs}px, ${fy + c.y * fs}px)`;
   }
   function zoomAt(k, px, py) {
     const s = Math.min(fitS * 10, Math.max(fitS, fs * k));
@@ -117,24 +117,67 @@
   });
   addEventListener('resize', () => { if (dlg.open) { fitS = Math.min(view.clientWidth / TW, view.clientHeight / TH); fs = Math.max(fs, fitS); place(); } });
 
+  // ── visitors: one count per browser, kept by the Cloudflare counter, shown as the game's coins:
+  // copper for a few, silver from 10, gold from 100, platinum from 1,000 ──
+  const api = dlg.dataset.counter;
+  const total = dlg.querySelector('.wm-total');
+  const names = new Intl.DisplayNames(['en'], { type: 'region' });
+  const coin = (n) => (n >= 1000 ? 'platinum' : n >= 100 ? 'gold' : n >= 10 ? 'silver' : 'copper');
+  const plural = (n, w) => `${n.toLocaleString('en-US')} ${w}${n === 1 ? '' : 's'}`;
+  function drawCoins({ total: t, places }) {
+    const box = dlg.querySelector('.wm-places');
+    box.textContent = '';
+    coins = places.filter((p) => p.lat <= 84 && p.lat >= -60).map((p) => {
+      let country = p.country;
+      try { country = names.of(p.country); } catch (e) { /* keep the code */ }
+      const where = p.region && p.region !== p.country ? `${p.region}, ${country}` : country;
+      const el = document.createElement('span');
+      el.className = 'wm-place';
+      el.tabIndex = 0;
+      el.setAttribute('role', 'img');
+      el.setAttribute('aria-label', `${where}: ${plural(p.n, 'visitor')}`);
+      el.innerHTML = `<img src="img/hud/coin-${coin(p.n)}.png" alt=""><span class="wm-count">${p.n.toLocaleString('en-US')}</span><span class="wm-where">${where}</span>`;
+      box.append(el);
+      const x = (p.lon + 180) / 0.4, y = (84 - p.lat) / 0.4;
+      // the home region sits beside the head rather than under it
+      if (Math.hypot(x - CX, y - CY) < 8) el.classList.add('is-home');
+      return { el, x, y };
+    });
+    total.textContent = `${plural(t, 'visitor')} from ${plural(places.length, 'region')}`;
+    total.hidden = !t;
+    place();
+  }
+  async function visitors() {
+    if (!api) return;
+    let counted = false;
+    try { counted = !!localStorage.getItem('counted'); } catch (e) { counted = true; }
+    try {
+      const r = await fetch(`${api}/${counted ? 'stats' : 'hit'}`, { method: counted ? 'GET' : 'POST' });
+      if (!r.ok) return;
+      drawCoins(await r.json());
+      if (!counted) try { localStorage.setItem('counted', '1'); } catch (e) { /* counted again next time */ }
+    } catch (e) { /* the map works without coins */ }
+  }
+  visitors();
+
   // ── gold watch: Chicago's time and zone, e.g. 5:17 PM CDT ──
   const clock = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
   const tick = () => set('time', clock.format(new Date()));
   tick();
   setInterval(tick, 1000);
 
-  // ── depth meter: the game's 16 px tile is 2 feet ──
-  const ground = document.querySelector('.ground');
-  function depth() {
-    const px = (ground.getBoundingClientRect().top - innerHeight) / zoom();
-    set('depth', px <= 0 ? 'On the surface' : `${Math.round(px / 8).toLocaleString('en-US')}' above ground`);
+  // ── weather radio: Chicago's temperature and sky now, from Open-Meteo, every 15 minutes ──
+  const SKY = [[0, 'Clear'], [1, 'Mostly clear'], [2, 'Partly cloudy'], [3, 'Cloudy'], [45, 'Fog'], [51, 'Drizzle'],
+    [61, 'Rain'], [66, 'Freezing rain'], [71, 'Snow'], [77, 'Snow grains'], [80, 'Showers'], [85, 'Snow showers'], [95, 'Thunderstorm']];
+  const sky = (code) => { let t = ''; for (const [c, name] of SKY) if (code >= c) t = name; return t; };
+  async function weather() {
+    try {
+      const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=41.88&longitude=-87.63&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=America%2FChicago');
+      const { current } = await r.json();
+      const f = current.temperature_2m, c = (f - 32) * 5 / 9;
+      set('weather', `${Math.round(f)}\u00b0F (${Math.round(c)}\u00b0C), ${sky(current.weather_code)}`);
+    } catch (e) { /* keep the last reading */ }
   }
-  let queued = false;
-  addEventListener('scroll', () => {
-    if (queued) return;
-    queued = true;
-    requestAnimationFrame(() => { queued = false; depth(); });
-  }, { passive: true });
-  addEventListener('resize', depth);
-  depth();
+  weather();
+  setInterval(weather, 15 * 60 * 1000);
 })();
