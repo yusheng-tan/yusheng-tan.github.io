@@ -330,6 +330,12 @@
     for (const c of CROSSERS) if (wide || c.phone) fliers.push(makeCrosser(c));
     fliers.forEach(place);
     makeWalkers();
+    // the status corner's radar: fliers in the window, plus the ground's cast once it is in view
+    window.critterCensus = () => {
+      let n = fliers.filter((f) => f.x > 0 && f.x < VW && f.y > 0 && f.y < VH).length;
+      if (ground.getBoundingClientRect().bottom < innerHeight + 40) n += walkers.length;
+      return n;
+    };
     // the page can grow after fonts load; keep the trees rooted on the grass
     new ResizeObserver(plantTrees).observe(document.body);
 

@@ -4,7 +4,7 @@
 /* Hallmark · pre-emit critique: P4 H4 E4 S5 R3 V5 · weakest: R, the game frame is decoration by design; kept frames to panels and buttons, text stays plain on parchment */
 /* Hallmark · answered F4 · both actions are Stardew-style pixel buttons by request; Email is red, Scholar is parchment so the primary still reads first */
 /* Hallmark · dismissed 40 · body ink is never set on the sky; every line of text sits on parchment, wood or dirt, each with its own ink */
-@import url("./tokens.css?v=ce695d8c");
+@import url("./tokens.css?v=254463ca");
 @import url("./base.css?v=e9862c24");
 
 /* no sideways bounce or swipe: the page only scrolls up and down */
@@ -180,6 +180,14 @@ h2 {
 .intro { margin-top: 0; }
 .slot-portrait img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
 .intro-text { min-width: 0; }
+/* three buttons need more than the text column: on wide screens the row runs under the portrait too */
+@media (min-width: 48.0625rem) {
+  .intro { row-gap: 0; }
+  .intro-text { display: contents; }
+  .slot-portrait { grid-row: 1 / span 3; }
+  .intro h1, .intro .role, .intro .lede { grid-column: 2; }
+  .intro .actions { grid-column: 1 / -1; }
+}
 h1 {
   font-size: clamp(1.375rem, 2.6vw + 0.5rem, 2.875rem);
   font-weight: 400;
@@ -391,3 +399,64 @@ a.pub-title:active { color: var(--color-ink); }
   h2 { font-size: 0.8125rem; }
   .panel-head::after { display: none; }
 }
+
+/* ── the status corner: Terraria's top right, with life and mana, the minimap and the info
+   accessories' read-outs. Fixed in the right-hand sky; hud.js hides it where it would touch the panels ── */
+.status {
+  position: fixed; top: var(--space-sm); right: var(--space-md); z-index: var(--z-sticky);
+  zoom: var(--zoom, 1);
+  display: grid; grid-template-columns: 256px 30px; column-gap: var(--space-2xs); align-items: start;
+  font-family: var(--font-body); font-weight: 800; color: var(--color-hud-text);
+  text-shadow:
+    2px 0 0 var(--color-hud-outline), -2px 0 0 var(--color-hud-outline), 0 2px 0 var(--color-hud-outline), 0 -2px 0 var(--color-hud-outline),
+    1px 1px 0 var(--color-hud-outline), -1px 1px 0 var(--color-hud-outline), 1px -1px 0 var(--color-hud-outline), -1px -1px 0 var(--color-hud-outline);
+  pointer-events: none;
+}
+.status.is-off { display: none; }
+.status img { image-rendering: pixelated; }
+.vitals { display: contents; }
+.life { grid-column: 1; }
+.mana { grid-column: 2; grid-row: 1 / span 2; display: grid; justify-items: center; }
+.status-label { font-size: 15px; line-height: 1.2; text-align: center; white-space: nowrap; }
+.hearts { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); justify-items: center; row-gap: var(--space-2xs); margin-top: var(--space-2xs); }
+.hearts img { width: 22px; height: 22px; }
+/* the last heart beats, as the game's do */
+.hearts img:last-child { animation: beat 1.4s var(--ease-in-out) infinite; }
+@keyframes beat { 0%, 60%, 100% { transform: scale(1); } 20% { transform: scale(1.18); } 40% { transform: scale(0.94); } }
+.stars { display: grid; gap: var(--space-2xs); margin-top: var(--space-2xs); }
+.stars img { width: 22px; height: 24px; }
+
+.minimap { grid-column: 1; position: relative; width: 256px; height: 264px; margin-top: var(--space-xs); }
+.map-window { position: absolute; left: 8px; top: 14px; width: 232px; height: 232px; overflow: clip; background: var(--color-map-void); }
+.map-world { position: absolute; left: 0; top: 0; transform-origin: 0 0; transform: translate(var(--tx, 0), var(--ty, 0)) scale(var(--s, 1)); transition: transform var(--dur-long) var(--ease-out); }
+.map-tiles { display: block; max-width: none; }
+/* Chicago is always the middle of the window: the map zooms about it */
+.map-me { position: absolute; left: 116px; top: 116px; translate: -50% -50%; display: grid; justify-items: center; }
+.map-me > img { width: 30px; height: 28px; position: relative; }
+.map-ping { position: absolute; left: 50%; top: 14px; width: 34px; height: 34px; translate: -50% -50%; border: 2px solid var(--color-hud-text); border-radius: 50%; animation: ping 2.2s var(--ease-out) infinite; }
+@keyframes ping { from { transform: scale(0.4); opacity: 1; } to { transform: scale(2.2); opacity: 0; } }
+.map-name { position: absolute; top: 30px; font-size: 13px; line-height: 1; white-space: nowrap; }
+.map-frame { position: absolute; inset: 0; pointer-events: none; }
+.map-btn {
+  position: absolute; top: 235px; width: 26px; height: 28px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; cursor: pointer; pointer-events: auto;
+  transition: background-color var(--dur-micro) var(--ease-out);
+}
+.map-btn[data-map="reset"] { left: 149px; }
+.map-btn[data-map="out"] { left: 175px; }
+.map-btn[data-map="in"] { left: 201px; }
+.map-btn:hover { background: var(--color-map-glint); }
+.map-btn:active { transform: translateY(1px); }
+.map-btn:focus-visible { outline: 2px solid var(--color-hud-text); outline-offset: 1px; }
+.map-btn:disabled { cursor: default; background: transparent; }
+
+.info { grid-column: 1; list-style: none; margin: var(--space-xs) 0 0; padding: 0; display: grid; gap: var(--space-3xs); font-size: 16px; line-height: 1.25; }
+.info li { display: grid; grid-template-columns: 36px minmax(0, 1fr); align-items: center; column-gap: var(--space-2xs); }
+.info img { justify-self: center; }
+@media (prefers-reduced-motion: reduce) {
+  .hearts img:last-child, .map-ping { animation: none; }
+  .map-ping { opacity: 0; }
+  .map-world, .map-btn { transition: none; }
+}
+/* phones and narrow windows have no sky beside the panels to hold it */
+@media (max-width: 64rem) { .status { display: none; } }
