@@ -58,7 +58,7 @@
     return n === 0 ? 'No creatures nearby' : n === 1 ? '1 creature nearby' : `${n} creatures nearby`;
   }
   function tick() {
-    set('time', `${clock.format(new Date())} in Chicago`);
+    set('time', clock.format(new Date()));
     set('moon', moon());
     set('radar', radar());
   }
