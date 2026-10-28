@@ -1,6 +1,6 @@
 // The status corner, read like Terraria's info accessories: the watch tells Chicago's time, the
 // compass where that is, and the weather radio its temperature. The minimap opens into the full
-// world map, as the game's M key does, where coins mark how many visitors came from each region.
+// world map, as the game's M key does, where coins mark how many visits came from each region.
 (() => {
   const status = document.querySelector('.status');
   if (!status) return;
@@ -117,8 +117,9 @@
   });
   addEventListener('resize', () => { if (dlg.open) { fitS = Math.min(view.clientWidth / TW, view.clientHeight / TH); fs = Math.max(fs, fitS); place(); } });
 
-  // ── visitors: one count per browser, kept by the Cloudflare counter, shown as the game's coins:
-  // copper for a few, silver from 10, gold from 100, platinum from 1,000 ──
+  // ── visits: everyone else counts each time they open the site (a refresh in the same tab does
+  // not), the owner's browsers never after their first; kept by the Cloudflare counter and shown as
+  // the game's coins: copper for a few, silver from 10, gold from 100, platinum from 1,000 ──
   const api = dlg.dataset.counter;
   const total = dlg.querySelector('.wm-total');
   const names = new Intl.DisplayNames(['en'], { type: 'region' });
@@ -135,7 +136,7 @@
       el.className = 'wm-place';
       el.tabIndex = 0;
       el.setAttribute('role', 'img');
-      el.setAttribute('aria-label', `${where}: ${plural(p.n, 'visitor')}`);
+      el.setAttribute('aria-label', `${where}: ${plural(p.n, 'visit')}`);
       el.innerHTML = `<img src="img/hud/coin-${coin(p.n)}.png" alt=""><span class="wm-count">${p.n.toLocaleString('en-US')}</span><span class="wm-where">${where}</span>`;
       box.append(el);
       const x = (p.lon + 180) / 0.4, y = (84 - p.lat) / 0.4;
@@ -143,19 +144,23 @@
       if (Math.hypot(x - CX, y - CY) < 8) el.classList.add('is-home');
       return { el, x, y };
     });
-    total.textContent = `${plural(t, 'visitor')} from ${plural(places.length, 'region')}`;
+    total.textContent = `${plural(t, 'visit')} from ${plural(places.length, 'region')}`;
     total.hidden = !t;
     place();
   }
   async function visitors() {
     if (!api) return;
-    let counted = false;
-    try { counted = !!localStorage.getItem('counted'); } catch (e) { counted = true; }
+    // opening the site once with ?me marks a browser as the owner's
+    let counted = true;
+    try {
+      if (new URLSearchParams(location.search).has('me')) localStorage.setItem('owner', '1');
+      counted = !!localStorage.getItem('owner') || !!sessionStorage.getItem('counted');
+    } catch (e) { /* storage blocked: only read the counts */ }
     try {
       const r = await fetch(`${api}/${counted ? 'stats' : 'hit'}`, { method: counted ? 'GET' : 'POST' });
       if (!r.ok) return;
       drawCoins(await r.json());
-      if (!counted) try { localStorage.setItem('counted', '1'); } catch (e) { /* counted again next time */ }
+      if (!counted) try { sessionStorage.setItem('counted', '1'); } catch (e) { /* counted again on refresh */ }
     } catch (e) { /* the map works without coins */ }
   }
   visitors();

@@ -1,6 +1,7 @@
 # Visitor map counter
 
-A Cloudflare Worker with a D1 database. The homepage posts once per browser to `/hit`; the Worker
+A Cloudflare Worker with a D1 database. The homepage posts to `/hit` each time someone opens it
+(not on a refresh, and never from the owner's browsers, marked by visiting once with `?me`); the Worker
 adds one to the visitor's region (state or province, from Cloudflare's own geolocation) and the
 full map draws `/stats` as Terraria coins. No IP address, city or other visitor detail is stored.
 

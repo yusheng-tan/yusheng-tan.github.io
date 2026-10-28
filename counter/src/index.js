@@ -1,5 +1,5 @@
 // Visitor counts by region for yusheng-tan.github.io.
-// POST /hit counts one visitor in the region Cloudflare places them in; GET /stats lists every
+// POST /hit counts one visit in the region Cloudflare places them in; GET /stats lists every
 // region with its count and a map position. Only the region (state or province), its country and
 // a running mean of Cloudflare's approximate coordinates are kept: never an IP or a city.
 

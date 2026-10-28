@@ -7,9 +7,6 @@
   const ground = document.querySelector('.ground-critters');
   if (!sky || !ground || !sky.getContext) return;
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // pixel art needs no retina backing store: drawn at 1x and scaled up crisp by the browser,
-  // the canvases have a quarter of the pixels to fill each frame
-  const dpr = 1;
 
   // sprite sheets: frames side by side, every sprite faces left as in the game's textures
   const SHEETS = {
@@ -29,12 +26,15 @@
     im.src = `img/critters/${file}.png${spriteVersion ? '?v=' + spriteVersion : ''}`;
   }));
 
-  function fit(cv, w, h) {
-    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
-    cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  // the canvases hold one pixel per art pixel and the browser scales them up crisp, so a frame
+  // fills `px` squared fewer pixels than the screen shows (16 times fewer at 4x)
+  function fit(cv, w, h, px) {
+    cv.width = Math.ceil(w / px); cv.height = Math.ceil(h / px);
+    cv.style.width = cv.width * px + 'px'; cv.style.height = cv.height * px + 'px';
     const g = cv.getContext('2d');
-    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.setTransform(1 / px, 0, 0, 1 / px, 0, 0);
     g.imageSmoothingEnabled = false;
+    g.px = px;
     return g;
   }
   const rand = (a, b) => a + Math.random() * (b - a);
@@ -44,16 +44,17 @@
   // one scale for every critter, sky and ground alike, so their sizes compare as in the game:
   // 1.5x on wide screens (each art pixel exactly 3 px), 1x on phones
   const unitScale = () => (innerWidth >= 768 ? half(1.5 * zoom()) : 1);
-  const snap = (v) => Math.round(v);
+  // positions land on whole art pixels
+  const snap = (g, v) => Math.round(v / g.px) * g.px;
 
   // draw frame `i` of a sheet centred on (x, y); `right` mirrors it to face right
   function draw(g, key, i, x, y, right, scale = 1) {
     const s = img[key]; if (!s) return;
     const w = s.w * scale, h = s.h * scale;
     g.save();
-    g.translate(snap(x), snap(y));
+    g.translate(snap(g, x), snap(g, y));
     if (right) g.scale(-1, 1);
-    g.drawImage(s.im, (i % s.frames) * s.w, 0, s.w, s.h, -w / 2, -h / 2, w, h);
+    g.drawImage(s.im, (i % s.frames) * s.w, 0, s.w, s.h, -Math.round(s.w / 2) * scale, -Math.round(s.h / 2) * scale, w, h);
     g.restore();
   }
 
@@ -64,7 +65,7 @@
   function layoutSky() {
     VW = innerWidth; VH = innerHeight;
     SCALE = unitScale();
-    sctx = fit(sky, VW, VH);
+    sctx = fit(sky, VW, VH, SCALE);
     const p = document.querySelector('.panel').getBoundingClientRect();
     panel = { l: p.left - 12, r: p.right + 12 };
     hudBottom = document.querySelector('.hud').getBoundingClientRect().bottom;
@@ -178,7 +179,7 @@
       // the demon eye turns to look where it flies (its texture looks left)
       const s = img.eye; if (!s) return;
       const a = Math.atan2(f.vy, f.vx) + Math.PI;
-      sctx.save(); sctx.translate(snap(f.x), snap(f.y)); sctx.rotate(a);
+      sctx.save(); sctx.translate(snap(sctx, f.x), snap(sctx, f.y)); sctx.rotate(a);
       sctx.drawImage(s.im, (Math.floor(f.flap / 2) % s.frames) * s.w, 0, s.w, s.h, -s.w * SCALE / 2, -s.h * SCALE / 2, s.w * SCALE, s.h * SCALE);
       sctx.restore();
       return;
@@ -203,7 +204,7 @@
     GW = ground.parentElement.clientWidth;
     G = unitScale();
     GH = Math.round(200 * G / 1.5);
-    gctx = fit(ground, GW, GH);
+    gctx = fit(ground, GW, GH, G);
     plantTrees();
   }
   // trees stand with their roots just under the grass, at the critters' scale, toward the edges
