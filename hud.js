@@ -1,7 +1,6 @@
 // The status corner, read like Terraria's info accessories: the watch tells Chicago's time, the
-// depth meter how far the view is above the grass, the stopwatch how fast you scroll, the radar how
-// many critters are on screen, the sextant tonight's moon and the tally counter your visits.
-// Nothing leaves the browser: the visit count lives in this visitor's own storage.
+// compass where that is, and the depth meter how far the view is above the grass. The minimap
+// opens into the full world map, as the game's M key does.
 (() => {
   const status = document.querySelector('.status');
   if (!status) return;
@@ -22,12 +21,13 @@
   fit();
   addEventListener('resize', fit);
 
+  // Chicago on the tiles: 0.4 degrees a pixel, from 180 W and 84 N
+  const TW = 900, TH = 360, CX = (-87.63 + 180) / 0.4, CY = (84 - 41.88) / 0.4;
+
   // ── minimap: three zoom steps about Chicago, like the frame's own buttons ──
   const map = status.querySelector('.minimap');
   const world = map.querySelector('.map-world');
-  const STEPS = [1, 2, 4], HOME = 1;
-  // Chicago on the tiles: 0.4 degrees a pixel, from 180 W and 84 N
-  const CX = (-87.63 + 180) / 0.4, CY = (84 - 41.88) / 0.4, MID = 116;
+  const STEPS = [1, 2, 4], HOME = 1, MID = 116;
   let step = HOME;
   const btn = (k) => map.querySelector(`[data-map="${k}"]`);
   function show() {
@@ -43,60 +43,98 @@
   btn('reset').addEventListener('click', () => { step = HOME; show(); });
   show();
 
-  // ── gold watch: the time in Chicago ──
-  const clock = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit' });
-  // ── sextant: the moon's age from a known new moon, in the game's eight phases ──
-  const PHASES = ['New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous', 'Full Moon', 'Waning Gibbous', 'Third Quarter', 'Waning Crescent'];
-  function moon() {
-    const days = (Date.now() - Date.UTC(2000, 0, 6, 18, 14)) / 864e5;
-    const age = ((days % 29.530589) + 29.530589) % 29.530589;
-    return PHASES[Math.floor(age / 29.530589 * 8 + 0.5) % 8];
+  // ── the full map: fit the world to the screen, then drag to move and scroll or pinch to zoom ──
+  const dlg = document.querySelector('.worldmap');
+  const view = dlg.querySelector('.wm-view');
+  const full = dlg.querySelector('.wm-world');
+  const me = dlg.querySelector('.wm-me');
+  let fs = 1, fx = 0, fy = 0, fitS = 1;
+  function place() {
+    // keep some of the world on screen whichever way it is dragged
+    const w = TW * fs, h = TH * fs, vw = view.clientWidth, vh = view.clientHeight;
+    fx = w <= vw ? (vw - w) / 2 : Math.min(0, Math.max(vw - w, fx));
+    fy = h <= vh ? (vh - h) / 2 : Math.min(0, Math.max(vh - h, fy));
+    full.style.transform = `translate(${fx}px, ${fy}px) scale(${fs})`;
+    me.style.transform = `translate(${fx + CX * fs}px, ${fy + CY * fs}px)`;
   }
-  // ── radar: critters in view, counted by critters.js ──
-  function radar() {
-    const n = window.critterCensus ? window.critterCensus() : 0;
-    return n === 0 ? 'No creatures nearby' : n === 1 ? '1 creature nearby' : `${n} creatures nearby`;
+  function zoomAt(k, px, py) {
+    const s = Math.min(fitS * 10, Math.max(fitS, fs * k));
+    fx = px - (px - fx) * (s / fs); fy = py - (py - fy) * (s / fs); fs = s;
+    place();
   }
-  function tick() {
-    set('time', clock.format(new Date()));
-    set('moon', moon());
-    set('radar', radar());
+  function openMap() {
+    if (dlg.open) return;
+    dlg.showModal();
+    // the whole world across the screen, Chicago in the middle
+    fitS = fs = Math.min(view.clientWidth / TW, view.clientHeight / TH);
+    fx = view.clientWidth / 2 - CX * fs; fy = view.clientHeight / 2 - CY * fs;
+    place();
   }
+  map.querySelector('.map-open').addEventListener('click', openMap);
+  dlg.querySelector('.wm-close').addEventListener('click', () => dlg.close());
+  addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() !== 'm' || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (getComputedStyle(status).display === 'none') return;
+    dlg.open ? dlg.close() : openMap();
+  });
+  view.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const r = view.getBoundingClientRect();
+    zoomAt(Math.exp(-e.deltaY * 0.002), e.clientX - r.left, e.clientY - r.top);
+  }, { passive: false });
+  // one finger drags, two pinch
+  const pts = new Map();
+  let pinch = 0;
+  view.addEventListener('pointerdown', (e) => {
+    view.setPointerCapture(e.pointerId);
+    pts.set(e.pointerId, [e.clientX, e.clientY]);
+    view.classList.add('is-dragging');
+  });
+  view.addEventListener('pointermove', (e) => {
+    if (!pts.has(e.pointerId)) return;
+    const [lx, ly] = pts.get(e.pointerId);
+    pts.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pts.size === 1) { fx += e.clientX - lx; fy += e.clientY - ly; place(); return; }
+    const [a, b] = [...pts.values()];
+    const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+    const r = view.getBoundingClientRect();
+    if (pinch) zoomAt(d / pinch, (a[0] + b[0]) / 2 - r.left, (a[1] + b[1]) / 2 - r.top);
+    pinch = d;
+  });
+  const lift = (e) => {
+    pts.delete(e.pointerId); pinch = 0;
+    if (!pts.size) view.classList.remove('is-dragging');
+  };
+  view.addEventListener('pointerup', lift);
+  view.addEventListener('pointercancel', lift);
+  // arrow keys and +/- for those without a mouse
+  dlg.addEventListener('keydown', (e) => {
+    const step = 60, c = [view.clientWidth / 2, view.clientHeight / 2];
+    const k = { ArrowLeft: [step, 0], ArrowRight: [-step, 0], ArrowUp: [0, step], ArrowDown: [0, -step] }[e.key];
+    if (k) { fx += k[0]; fy += k[1]; place(); e.preventDefault(); }
+    else if (e.key === '+' || e.key === '=') zoomAt(1.25, ...c);
+    else if (e.key === '-') zoomAt(0.8, ...c);
+  });
+  addEventListener('resize', () => { if (dlg.open) { fitS = Math.min(view.clientWidth / TW, view.clientHeight / TH); fs = Math.max(fs, fitS); place(); } });
+
+  // ── gold watch: Chicago's time and zone, e.g. 5:17 PM CDT ──
+  const clock = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+  const tick = () => set('time', clock.format(new Date()));
   tick();
   setInterval(tick, 1000);
 
-  // ── tally counter: this visitor's visits, counted once a browsing session ──
-  let visits = 1;
-  try {
-    visits = parseInt(localStorage.getItem('visits') || '0', 10) || 0;
-    if (!sessionStorage.getItem('counted')) { visits += 1; localStorage.setItem('visits', visits); sessionStorage.setItem('counted', '1'); }
-    visits = Math.max(1, visits);
-  } catch (e) { visits = 1; }
-  const nth = (n) => { const t = n % 100, u = n % 10; return n + (t > 10 && t < 14 ? 'th' : u === 1 ? 'st' : u === 2 ? 'nd' : u === 3 ? 'rd' : 'th'); };
-  set('visits', visits === 1 ? 'Your first visit' : `Your ${nth(visits)} visit`);
-
-  // ── depth meter and stopwatch: the game's 16 px tile is 2 feet ──
+  // ── depth meter: the game's 16 px tile is 2 feet ──
   const ground = document.querySelector('.ground');
-  let lastY = scrollY, lastT = performance.now(), mph = 0, running = false;
   function depth() {
     const px = (ground.getBoundingClientRect().top - innerHeight) / zoom();
-    if (px <= 0) return 'On the surface';
-    return `${Math.round(px / 8).toLocaleString('en-US')}' above ground`;
+    set('depth', px <= 0 ? 'On the surface' : `${Math.round(px / 8).toLocaleString('en-US')}' above ground`);
   }
-  function frame(t) {
-    const dt = Math.max(1, t - lastT) / 1000;
-    const v = Math.abs(scrollY - lastY) / zoom() / dt;     // px a second
-    const want = v / 8 * 0.6818;                            // ft a second to mph
-    mph += (want - mph) * Math.min(1, dt * 8);
-    lastY = scrollY; lastT = t;
-    set('depth', depth());
-    set('speed', `${Math.round(mph)} mph`);
-    if (mph > 0.5 || v > 0) requestAnimationFrame(frame);
-    else { running = false; set('speed', '0 mph'); }
-  }
+  let queued = false;
   addEventListener('scroll', () => {
-    if (!running) { running = true; lastT = performance.now(); requestAnimationFrame(frame); }
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; depth(); });
   }, { passive: true });
-  set('depth', depth());
-  addEventListener('resize', () => set('depth', depth()));
+  addEventListener('resize', depth);
+  depth();
 })();
