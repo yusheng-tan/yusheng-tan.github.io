@@ -13,7 +13,7 @@ npx wrangler d1 execute visitor-map --remote --file=schema.sql
 npx wrangler deploy                          # prints https://visitor-map.<you>.workers.dev
 ```
 
-Then set `COUNTER` in `imgsrc/build_index.py` to that URL and rebuild the page.
+Deployed at https://visitor-map.yusheng-tan.workers.dev, which `COUNTER` in `imgsrc/build_index.py` points to.
 
 ## Test locally
 

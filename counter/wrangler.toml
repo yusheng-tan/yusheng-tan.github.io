@@ -5,4 +5,4 @@ compatibility_date = "2026-10-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "visitor-map"
-database_id = "REPLACE_WITH_DATABASE_ID"
+database_id = "af2a361f-0805-42d3-95d3-dde62643c817"
