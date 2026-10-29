@@ -5,6 +5,7 @@
 /* Hallmark · answered F4 · both actions are Stardew-style pixel buttons by request; Email is red, Scholar is parchment so the primary still reads first */
 /* Hallmark · dismissed 40 · body ink is never set on the sky; every line of text sits on parchment, wood or dirt, each with its own ink */
 /* Hallmark · dismissed 58 · the count includes the footer's patch notes, which stay closed until opened; the page as shown is under 450 words */
+/* Hallmark · dismissed 42 · the four "columns" are the patch notes inside a closed details element; the footer itself is the grass strip with one line of name, email and dates */
 @import url("./tokens.css?v=efa08b4b");
 @import url("./base.css?v=e9862c24");
 
