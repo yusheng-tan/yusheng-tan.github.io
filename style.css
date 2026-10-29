@@ -4,9 +4,9 @@
 /* Hallmark · pre-emit critique: P4 H4 E4 S5 R3 V5 · weakest: R, the game frame is decoration by design; kept frames to panels and buttons, text stays plain on parchment */
 /* Hallmark · answered F4 · both actions are Stardew-style pixel buttons by request; Email is red, Scholar is parchment so the primary still reads first */
 /* Hallmark · dismissed 40 · body ink is never set on the sky; every line of text sits on parchment, wood or dirt, each with its own ink */
-/* Hallmark · dismissed 58 · the count includes the footer's patch notes, which stay closed until opened; the page as shown is under 450 words */
-/* Hallmark · dismissed 42 · the four "columns" are the patch notes inside a closed details element; the footer itself is the grass strip with one line of name, email and dates */
-@import url("./tokens.css?v=22c31eb6");
+/* Hallmark · dismissed 58 · the count includes the footer's changelog, which stay closed until opened; the page as shown is under 450 words */
+/* Hallmark · dismissed 42 · the "columns" are the changelog's versions inside a closed details element; the footer itself is the grass strip with one line of name, email and dates */
+@import url("./tokens.css?v=0f312b8e");
 @import url("./base.css?v=e9862c24");
 
 /* no sideways bounce or swipe: the page only scrolls up and down */
@@ -195,9 +195,6 @@ h2 {
   background: var(--color-wood-dark);
   box-shadow: 0 0 0 var(--px) var(--color-wood);
 }
-/* the photo takes the light of the hour: warm at dawn and dusk, blue at night */
-.window { position: relative; }
-.window::after { content: ""; position: absolute; inset: var(--px); background: var(--window-tint); mix-blend-mode: multiply; pointer-events: none; }
 /* fixed ratio: the photo scales, it never re-crops */
 .window img { width: 100%; height: auto; aspect-ratio: 7 / 2; object-fit: cover; object-position: 50% 55%; }
 
@@ -378,27 +375,30 @@ a.pub-title:active { color: var(--color-ink); }
 .ground-text a { color: var(--color-parchment); text-decoration-color: var(--color-dirt-light); transition: color var(--dur-micro) var(--ease-out); }
 .ground-text a:hover { color: var(--color-grass-light); }
 .ground-text a:active { color: var(--color-parchment-hi); }
-/* patch notes, as the game posts them: closed by default, versions newest first */
-.patch-notes { flex-basis: 100%; margin-top: var(--space-sm); }
-.patch-notes summary {
-  display: inline-flex; align-items: center; gap: var(--space-xs);
-  font-family: var(--font-display); font-size: 0.75rem; cursor: pointer; list-style: none;
-  transition: color var(--dur-micro) var(--ease-out);
-}
-.patch-notes summary::-webkit-details-marker { display: none; }
-.patch-notes summary::before { content: "+"; display: inline-grid; place-items: center; width: 1.25em; height: 1.25em; background: var(--color-dirt-dark); box-shadow: 0 0 0 2px var(--color-dirt-light); }
-.patch-notes[open] summary::before { content: "\2212"; }
-.patch-notes summary:hover { color: var(--color-grass-light); }
-.patch-notes summary:focus-visible { outline: 2px solid var(--color-parchment-hi); outline-offset: 4px; }
+/* the changelog: closed by default; inside, one line per version, newest first and open, and
+   only one open at a time. Past a dozen versions the list scrolls within its box */
+.changelog { flex-basis: 100%; margin-top: var(--space-sm); }
+.changelog summary { cursor: pointer; list-style: none; transition: color var(--dur-micro) var(--ease-out); }
+.changelog summary::-webkit-details-marker { display: none; }
+.changelog > summary { display: inline-flex; align-items: center; gap: var(--space-xs); font-family: var(--font-display); font-size: 0.75rem; }
+.changelog summary::before { content: "+"; display: inline-grid; place-items: center; flex: none; width: 1.25em; height: 1.25em; background: var(--color-dirt-dark); box-shadow: 0 0 0 2px var(--color-dirt-light); }
+.changelog[open] > summary::before, .patch[open] > summary::before { content: "\2212"; }
+.changelog summary:hover { color: var(--color-grass-light); }
+.changelog summary:focus-visible { outline: 2px solid var(--color-parchment-hi); outline-offset: 4px; }
 .patches {
-  display: grid; gap: var(--space-lg); margin-top: var(--space-md); padding: var(--space-md) var(--space-lg);
+  max-width: 44rem; max-height: 26rem; overflow-y: auto; overscroll-behavior: contain;
+  margin-top: var(--space-md); padding: var(--space-xs) var(--space-md);
   background: var(--color-dirt-dark); box-shadow: 0 0 0 2px var(--color-dirt-light);
   font-size: var(--text-xs); line-height: 1.5;
+  scrollbar-color: var(--color-dirt-light) var(--color-dirt-dark);
 }
-.patch h3 { margin: 0; font-family: var(--font-display); font-size: 0.75rem; font-weight: 400; }
-.patch-ver { color: var(--color-grass-light); margin-right: var(--space-2xs); }
-.patch-date { margin: var(--space-2xs) 0 0; color: var(--color-parchment-lo); }
-.patch ul { margin: var(--space-xs) 0 0; padding-left: 1.25em; list-style: square; }
+.patch + .patch { border-top: 2px dashed var(--color-dirt); }
+.patch > summary { display: flex; align-items: center; gap: var(--space-xs); padding: var(--space-xs) 0; }
+.patch > summary::before { font-size: 0.75em; }
+.patch-ver { flex: none; font-family: var(--font-display); font-size: 0.6875rem; color: var(--color-grass-light); }
+.patch-name { flex: 1; min-width: 0; font-weight: 800; }
+.patch time { flex: none; color: var(--color-parchment-lo); white-space: nowrap; }
+.patch ul { margin: 0 0 var(--space-sm); padding-left: 2.6em; list-style: square; }
 .patch li + li { margin-top: var(--space-2xs); }
 .foot-dates span { white-space: nowrap; }
 
