@@ -467,7 +467,7 @@ a.pub-title:active { color: var(--color-ink); }
 .wm-view img { -webkit-user-drag: none; }
 .wm-view.is-dragging { cursor: grabbing; }
 .wm-world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
-.wm-world img { display: block; max-width: none; }
+.wm-world img { display: block; max-width: none; width: 900px; height: 360px; }
 .wm-me { position: absolute; left: 0; top: 0; translate: -50% 0; display: grid; justify-items: center; pointer-events: none; }
 .wm-me > img { width: 45px; height: 42px; position: relative; translate: 0 -50%; }
 .wm-me .map-ping { top: 0; width: 52px; height: 52px; }
