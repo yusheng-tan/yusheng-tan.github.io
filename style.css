@@ -5,7 +5,7 @@
 /* Hallmark · answered F4 · both actions are Stardew-style pixel buttons by request; Email is red, Scholar is parchment so the primary still reads first */
 /* Hallmark · dismissed 40 · body ink is never set on the sky; every line of text sits on parchment, wood or dirt, each with its own ink */
 /* Hallmark · dismissed 58 · the count includes the footer's patch notes, which stay closed until opened; the page as shown is under 450 words */
-@import url("./tokens.css?v=254463ca");
+@import url("./tokens.css?v=efa08b4b");
 @import url("./base.css?v=e9862c24");
 
 /* no sideways bounce or swipe: the page only scrolls up and down */
@@ -72,7 +72,28 @@ body {
 .tree { position: absolute; image-rendering: pixelated; }
 @keyframes drift { from { translate: -60px 0; } to { translate: 60px 0; } }
 @keyframes drift-far { from { translate: -25px 0; } to { translate: 25px 0; } }
-@media (prefers-reduced-motion: reduce) { .cloud { animation: none; } }
+/* the sun by day, low in the sky at dawn and dusk; the moon at night in its real phase (the head
+   script picks the frame); stars come out at dusk and fill the night, a few of them twinkling */
+.sun, .moon, .stars { position: absolute; image-rendering: pixelated; }
+.sun { top: 110px; left: 6%; width: calc(32 * var(--px)); height: calc(32 * var(--px)); background: url("img/sky/sun.png") 0 0 / 100% 100%; }
+.moon { display: none; top: 120px; left: 7%; width: calc(24 * var(--px)); height: calc(24 * var(--px)); background: url("img/sky/moon.png") var(--moon-frame, 57%) 0 / 800% 100%; }
+:root[data-sky="dawn"] .sun, :root[data-sky="dusk"] .sun { top: 540px; }
+:root[data-sky="night"] .sun { display: none; }
+:root[data-sky="night"] .moon { display: block; }
+.stars { inset: 0; opacity: 0; background: url("img/sky/stars-1.png") 0 0 / calc(131 * var(--px)) calc(97 * var(--px)); }
+.stars-2 { background: url("img/sky/stars-2.png") 37px 23px / calc(89 * var(--px)) calc(67 * var(--px)); }
+:root[data-sky="dusk"] .stars-1 { opacity: 0.35; }
+:root[data-sky="night"] .stars-1 { opacity: 1; }
+:root[data-sky="night"] .stars-2 { animation: twinkle 3.2s steps(4) infinite alternate; }
+@keyframes twinkle { from { opacity: 0.25; } to { opacity: 1; } }
+/* the clouds and trees darken with the light */
+:root[data-sky="dawn"] :is(.cloud, .tree) { filter: sepia(0.2) saturate(1.4) hue-rotate(-30deg); }
+:root[data-sky="dusk"] :is(.cloud, .tree) { filter: sepia(0.35) saturate(1.5) hue-rotate(-20deg) brightness(0.9); }
+:root[data-sky="night"] :is(.cloud, .tree) { filter: brightness(0.5) saturate(0.6); }
+@media (prefers-color-scheme: dark) { :root:not([data-sky]) .sun { display: none; } }
+/* on phones the panels fill the width and there is no margin of sky for them */
+@media (max-width: 48rem) { .sky .sun, :root[data-sky] .sky .moon { display: none; } }
+@media (prefers-reduced-motion: reduce) { .cloud { animation: none; } :root[data-sky="night"] .stars-2 { animation: none; opacity: 0.7; } }
 /* critters fly behind the panels on wide screens; on phones they come over the page only when tapped */
 .sky-critters { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 .sky-critters, .ground-critters { image-rendering: pixelated; }
@@ -173,6 +194,9 @@ h2 {
   background: var(--color-wood-dark);
   box-shadow: 0 0 0 var(--px) var(--color-wood);
 }
+/* the photo takes the light of the hour: warm at dawn and dusk, blue at night */
+.window { position: relative; }
+.window::after { content: ""; position: absolute; inset: var(--px); background: var(--window-tint); mix-blend-mode: multiply; pointer-events: none; }
 /* fixed ratio: the photo scales, it never re-crops */
 .window img { width: 100%; height: auto; aspect-ratio: 7 / 2; object-fit: cover; object-position: 50% 55%; }
 

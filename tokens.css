@@ -35,6 +35,8 @@
   /* the game's own HUD: white read-outs with a dark outline, over a black unexplored map */
   --color-hud-text: oklch(98% 0.01 90); --color-hud-outline: oklch(20% 0.03 260);
   --color-map-void: oklch(14% 0.02 260); --color-map-glint: oklch(98% 0.01 90 / 0.28);
+  --color-firefly: oklch(93% 0.19 118);
+  --window-tint: transparent;
 
   /* venue badges, coloured like item rarity */
   --color-r-green: oklch(44% 0.15 145); --color-r-blue: oklch(40% 0.15 258); --color-r-grey: oklch(42% 0.04 60);
@@ -49,12 +51,34 @@
 }
 /* phones keep the smaller steps */
 @media (max-width: 48rem) { :root { --px: 3px; --text-xs: 0.875rem; --text-sm: 1rem; --text-md: 1.125rem; --text-lg: 1.25rem; } }
+/* the sky by the hour in Chicago, which the head script sets as the game's clock sets its sky;
+   without the script, a dark-mode reader gets the night */
+:root[data-sky="dawn"] {
+  --color-sky-top: oklch(62% 0.09 268);
+  --color-paper: oklch(84% 0.07 18);
+  --color-paper-2: oklch(90% 0.06 72);
+  --color-paper-3: oklch(76% 0.08 300);
+  --window-tint: oklch(90% 0.06 25);
+}
+:root[data-sky="dusk"] {
+  --color-sky-top: oklch(40% 0.11 285);
+  --color-paper: oklch(70% 0.13 42);
+  --color-paper-2: oklch(79% 0.11 62);
+  --color-paper-3: oklch(58% 0.12 330);
+  --window-tint: oklch(80% 0.11 48);
+}
+:root[data-sky="night"] {
+  --color-sky-top: oklch(22% 0.06 250);
+  --color-paper: oklch(34% 0.07 245);
+  --color-paper-2: oklch(40% 0.07 240);
+  --color-paper-3: oklch(28% 0.06 248);
+  --window-tint: oklch(52% 0.08 262);
+}
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-sky]) {
     --color-sky-top: oklch(22% 0.06 250);
     --color-paper: oklch(34% 0.07 245);
     --color-paper-2: oklch(40% 0.07 240);
     --color-paper-3: oklch(28% 0.06 248);
-    --color-cloud: oklch(62% 0.03 245); --color-cloud-shade: oklch(50% 0.03 248);
   }
 }

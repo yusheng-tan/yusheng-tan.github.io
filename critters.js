@@ -1,12 +1,13 @@
 // Sky and ground critters, using Terraria's own sprites (from terraria.wiki.gg) and motion modelled on
 // the game's AI: harpies and the demon eye swoop on inertia, birds,
-// butterflies, a dragonfly and a pixie cross the sky, and on the grass slimes hop and critters wander. Pure decoration on two aria-hidden canvases; with reduced motion
+// butterflies, a dragonfly and a pixie cross the sky, fireflies drift at night, and on the grass slimes hop and critters wander. Pure decoration on two aria-hidden canvases; with reduced motion
 // they are drawn once and stay still.
 (() => {
   const sky = document.querySelector('.sky-critters');
   const ground = document.querySelector('.ground-critters');
   if (!sky || !ground || !sky.getContext) return;
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fireflyColour = getComputedStyle(document.documentElement).getPropertyValue('--color-firefly').trim();
 
   // sprite sheets: frames side by side, every sprite faces left as in the game's textures
   const SHEETS = {
@@ -101,6 +102,10 @@
   function makeWanderer(key) {
     return { kind: 'wander', key, x: 0, y: 0, vx: 0, vy: 0, right: false, accel: 170, max: 110, flap: Math.random() * 6 };
   }
+  // fireflies come out at night, as in the game: a glowing speck that drifts slowly and blinks
+  function makeFirefly() {
+    return { ...makeWanderer('firefly'), accel: 30, max: 22, glow: Math.random() * 6 };
+  }
   // speeds are per unit of scale, so bigger critters keep the same pace relative to their size
   function pace(f) {
     if (f.kind === 'wander') { f.accelS = f.accel * SCALE; f.maxS = f.max * SCALE; }
@@ -116,7 +121,7 @@
     { key: 'monarch', fly: 'butterfly', speed: 34, fps: 8, phone: true },
     { key: 'sulphur', fly: 'butterfly', speed: 30, fps: 8 },
     { key: 'dragonfly', fly: 'dart', speed: 230, fps: 20 },
-    { key: 'pixie', fly: 'drift', speed: 55, fps: 8 },
+    { key: 'pixie', fly: 'drift', speed: 55, fps: 8, night: true },
   ];
   function makeCrosser(c) {
     return { kind: 'cross', ...c, x: -999, y: 0, hidden: true, wait: rand(0.5, wide ? 9 : 14), frame: 0 };
@@ -175,6 +180,16 @@
   function drawFlier(f) {
     if (f.hidden) return;
     if (f.kind === 'cross') { draw(sctx, f.key, Math.floor(f.frame), f.x, f.y, f.dir > 0, SCALE); return; }
+    if (f.key === 'firefly') {
+      const a = Math.max(0, Math.sin(f.glow + performance.now() / 700));
+      if (!a) return;
+      const x = snap(sctx, f.x), y = snap(sctx, f.y), u = 2 * SCALE;
+      sctx.fillStyle = fireflyColour;
+      sctx.globalAlpha = 0.25 * a; sctx.fillRect(x - u, y - u, 3 * u, 3 * u);
+      sctx.globalAlpha = a; sctx.fillRect(x, y, u, u);
+      sctx.globalAlpha = 1;
+      return;
+    }
     if (f.key === 'eye') {
       // the demon eye turns to look where it flies (its texture looks left)
       const s = img.eye; if (!s) return;
@@ -325,10 +340,15 @@
 
   Promise.all(load).then(() => {
     layoutSky(); layoutGround();
-    // phones get a smaller flock, since there everything flies over the text
+    // phones get a smaller flock, since there everything flies over the text. The sky's hour (set
+    // in the head) picks the cast as the game does: demon eyes and fireflies only at night, birds,
+    // butterflies and the dragonfly only by day, harpies and the pixie at any hour
+    const night = document.documentElement.dataset.sky === 'night';
     fliers.push(makeWanderer('harpy'));
-    if (wide) fliers.push(makeWanderer('harpy'), makeWanderer('eye'));
-    for (const c of CROSSERS) if (wide || c.phone) fliers.push(makeCrosser(c));
+    if (wide) fliers.push(makeWanderer(night ? 'eye' : 'harpy'));
+    if (wide && night) fliers.push(makeWanderer('eye'));
+    if (night) for (let i = 0; i < (wide ? 8 : 3); i++) fliers.push(makeFirefly());
+    for (const c of CROSSERS) if ((wide || c.phone) && (!night || c.night)) fliers.push(makeCrosser(c));
     fliers.forEach(place);
     makeWalkers();
     // the page can grow after fonts load; keep the trees rooted on the grass
