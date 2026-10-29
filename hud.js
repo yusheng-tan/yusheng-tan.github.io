@@ -140,7 +140,8 @@
 
   // ── visits: everyone else counts each time they open the site (a refresh in the same tab does
   // not), the owner's browsers never after their first; kept by the Cloudflare counter and shown as
-  // the game's coins: copper for a few, silver from 10, gold from 100, platinum from 1,000 ──
+  // the game's coins, which change at every hundred as in the game: copper up to 99, silver from
+  // 100, gold from 10,000, platinum from 1,000,000 ──
   // the counter's addresses, tried in turn: its own domain first (workers.dev is blocked in
   // mainland China), then workers.dev
   const apis = (dlg.dataset.counter || '').split(/\s+/).filter(Boolean);
@@ -155,7 +156,7 @@
   }
   const total = dlg.querySelector('.wm-total');
   const names = new Intl.DisplayNames(['en'], { type: 'region' });
-  const coin = (n) => (n >= 1000 ? 'platinum' : n >= 100 ? 'gold' : n >= 10 ? 'silver' : 'copper');
+  const coin = (n) => (n >= 1e6 ? 'platinum' : n >= 1e4 ? 'gold' : n >= 100 ? 'silver' : 'copper');
   const plural = (n, w) => `${n.toLocaleString('en-US')} ${w}${n === 1 ? '' : 's'}`;
   function drawCoins({ total: t, places }) {
     const box = dlg.querySelector('.wm-places');
