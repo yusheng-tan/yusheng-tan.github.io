@@ -97,8 +97,17 @@
     fx = view.clientWidth / 2 - CX * fs; fy = view.clientHeight / 2 - CY * fs;
     place();
   }
-  map.querySelector('.map-open').addEventListener('click', openMap);
-  if (tab) tab.addEventListener('click', openMap);
+  // Closing hands focus back to what opened the map. That ring is only wanted when the map was
+  // opened from the keyboard on that button (Enter or Space); after a click, a tap or the M key the
+  // button would light up with a ring nobody asked for, so it lets go of focus instead
+  let fromKeys = false;
+  const opener = (e) => { fromKeys = e.detail === 0; openMap(); };
+  map.querySelector('.map-open').addEventListener('click', opener);
+  if (tab) tab.addEventListener('click', opener);
+  dlg.addEventListener('close', () => {
+    if (!fromKeys) requestAnimationFrame(() => { if (document.activeElement !== document.body) document.activeElement.blur(); });
+    fromKeys = false;
+  });
   // touch screens have no wheel or Esc key: the hint names what they do have
   if (matchMedia('(pointer: coarse)').matches) dlg.querySelector('.wm-hint').textContent = 'Pinch to zoom, drag to move';
   dlg.querySelector('.wm-close').addEventListener('click', () => dlg.close());
