@@ -2,6 +2,12 @@ name = "visitor-map"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
 
+# a custom address as well as workers.dev, which mainland China blocks
+workers_dev = true
+routes = [
+  { pattern = "count.yushengtan.dpdns.org", custom_domain = true }
+]
+
 [[d1_databases]]
 binding = "DB"
 database_name = "visitor-map"

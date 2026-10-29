@@ -141,7 +141,18 @@
   // ── visits: everyone else counts each time they open the site (a refresh in the same tab does
   // not), the owner's browsers never after their first; kept by the Cloudflare counter and shown as
   // the game's coins: copper for a few, silver from 10, gold from 100, platinum from 1,000 ──
-  const api = dlg.dataset.counter;
+  // the counter's addresses, tried in turn: its own domain first (workers.dev is blocked in
+  // mainland China), then workers.dev
+  const apis = (dlg.dataset.counter || '').split(/\s+/).filter(Boolean);
+  async function ask(path, method) {
+    for (const api of apis) {
+      try {
+        const r = await fetch(`${api}/${path}`, { method, signal: AbortSignal.timeout(6000) });
+        if (r.ok) return r.json();
+      } catch (e) { /* try the next address */ }
+    }
+    return null;
+  }
   const total = dlg.querySelector('.wm-total');
   const names = new Intl.DisplayNames(['en'], { type: 'region' });
   const coin = (n) => (n >= 1000 ? 'platinum' : n >= 100 ? 'gold' : n >= 10 ? 'silver' : 'copper');
@@ -172,19 +183,18 @@
     place();
   }
   async function visitors() {
-    if (!api) return;
+    if (!apis.length) return;
     // opening the site once with ?me marks a browser as the owner's
     let counted = true;
     try {
       if (new URLSearchParams(location.search).has('me')) localStorage.setItem('owner', '1');
       counted = !!localStorage.getItem('owner') || !!sessionStorage.getItem('counted');
     } catch (e) { /* storage blocked: only read the counts */ }
-    try {
-      const r = await fetch(`${api}/${counted ? 'stats' : 'hit'}`, { method: counted ? 'GET' : 'POST' });
-      if (!r.ok) return;
-      drawCoins(await r.json());
-      if (!counted) try { sessionStorage.setItem('counted', '1'); } catch (e) { /* counted again on refresh */ }
-    } catch (e) { /* the map works without coins */ }
+    // the map works without coins if no address answers
+    const data = await ask(counted ? 'stats' : 'hit', counted ? 'GET' : 'POST');
+    if (!data) return;
+    drawCoins(data);
+    if (!counted) try { sessionStorage.setItem('counted', '1'); } catch (e) { /* counted again on refresh */ }
   }
   visitors();
 

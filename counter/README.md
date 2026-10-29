@@ -14,7 +14,10 @@ npx wrangler d1 execute visitor-map --remote --file=schema.sql
 npx wrangler deploy                          # prints https://visitor-map.<you>.workers.dev
 ```
 
-Deployed at https://visitor-map.yusheng-tan.workers.dev, which `COUNTER` in `imgsrc/build_index.py` points to.
+Deployed at https://count.yushengtan.dpdns.org (a free DigitalPlat domain whose nameservers are
+Cloudflare's, so mainland China can reach it) and https://visitor-map.yusheng-tan.workers.dev;
+`COUNTER` in `imgsrc/build_index.py` lists both, and the page tries them in that order.
+The domain is free for a year at a time; renew it on DigitalPlat within 120 days of expiry.
 
 ## Test locally
 
