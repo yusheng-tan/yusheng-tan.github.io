@@ -55,8 +55,27 @@
     fy = h <= vh ? (vh - h) / 2 : Math.min(0, Math.max(vh - h, fy));
     full.style.transform = `translate(${fx}px, ${fy}px) scale(${fs})`;
     me.style.transform = `translate(${fx + CX * fs}px, ${fy + CY * fs}px)`;
-    for (const c of coins) c.el.style.transform = `translate(${fx + c.x * fs}px, ${fy + c.y * fs}px)`;
+    // coins too close to tell apart join the biggest one near them, and part again on zooming in
+    const groups = [];
+    for (const c of coins) {
+      const sx = fx + c.x * fs + (c.home ? 30 : 0), sy = fy + c.y * fs;
+      const g = groups.find((g) => Math.abs(g.sx - sx) < 34 && Math.abs(g.sy - sy) < 26);
+      if (g) { g.all.push(c); c.el.hidden = true; continue; }
+      groups.push({ sx, sy, all: [c] });
+      c.el.hidden = false;
+      c.el.style.transform = `translate(${fx + c.x * fs}px, ${sy}px)`;
+    }
+    for (const { all } of groups) {
+      const [lead] = all, n = all.reduce((s, c) => s + c.n, 0);
+      const where = all.length === 1 ? lead.where : all.map((c) => c.region).join(', ');
+      setText(lead.count, n.toLocaleString('en-US'));
+      setText(lead.label, where);
+      const src = `img/hud/coin-${coin(n)}.png`;
+      if (!lead.img.src.endsWith(src)) lead.img.src = src;
+      lead.el.setAttribute('aria-label', `${where}: ${plural(n, 'visit')}`);
+    }
   }
+  const setText = (el, t) => { if (el.textContent !== t) el.textContent = t; };
   function zoomAt(k, px, py) {
     const s = Math.min(fitS * 10, Math.max(fitS, fs * k));
     fx = px - (px - fx) * (s / fs); fy = py - (py - fy) * (s / fs); fs = s;
@@ -139,13 +158,15 @@
       el.tabIndex = 0;
       el.setAttribute('role', 'img');
       el.setAttribute('aria-label', `${where}: ${plural(p.n, 'visit')}`);
-      el.innerHTML = `<img src="img/hud/coin-${coin(p.n)}.png" alt="" draggable="false"><span class="wm-count">${p.n.toLocaleString('en-US')}</span><span class="wm-where">${where}</span>`;
+      el.innerHTML = `<img src="img/hud/coin-${coin(p.n)}.png" alt="" draggable="false"><span class="wm-count"></span><span class="wm-where"></span>`;
       box.append(el);
       const x = (p.lon + 180) / 0.4, y = (84 - p.lat) / 0.4;
       // the home region sits beside the head rather than under it
-      if (Math.hypot(x - CX, y - CY) < 8) el.classList.add('is-home');
-      return { el, x, y };
-    });
+      const home = Math.hypot(x - CX, y - CY) < 8;
+      if (home) el.classList.add('is-home');
+      return { el, x, y, n: p.n, where, region: p.region || country, home,
+        img: el.querySelector('img'), count: el.querySelector('.wm-count'), label: el.querySelector('.wm-where') };
+    }).sort((a, b) => b.n - a.n);
     total.textContent = `${plural(t, 'visit')} from ${plural(places.length, 'region')}`;
     total.hidden = !t;
     place();
