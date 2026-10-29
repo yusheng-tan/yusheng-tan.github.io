@@ -57,7 +57,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Press+Start+2P&display=swap">
-<link rel="stylesheet" href="style.css?v=e9ae29e6">
+<link rel="stylesheet" href="style.css?v=5b4ebe57">
 <script>
 // On desktop the whole page scales with the window so the panels always take about 55% of its
 // width, with sky either side. The scale follows the window's real width, not the browser
@@ -135,6 +135,7 @@
       <a href="#papers">Publications</a>
       <a href="#education">Education</a>
     </nav>
+    <button class="map-tab" type="button" aria-haspopup="dialog" aria-label="Open the world map" hidden><svg class="px-icon" viewBox="0 0 9 9" width="18" height="18" aria-hidden="true" focusable="false" shape-rendering="crispEdges"><rect x="2" y="0" width="5" height="1"/><rect x="1" y="1" width="2" height="1"/><rect x="6" y="1" width="2" height="1"/><rect x="0" y="2" width="2" height="1"/><rect x="7" y="2" width="2" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="8" y="3" width="1" height="1"/><rect x="0" y="4" width="2" height="1"/><rect x="7" y="4" width="2" height="1"/><rect x="1" y="5" width="2" height="1"/><rect x="6" y="5" width="2" height="1"/><rect x="2" y="6" width="2" height="1"/><rect x="5" y="6" width="2" height="1"/><rect x="3" y="7" width="3" height="1"/><rect x="4" y="8" width="1" height="1"/></svg><span>Map</span></button>
   </div>
 </header>
 
@@ -146,7 +147,8 @@
       </div>
       <span class="map-me"><span class="map-ping" aria-hidden="true"></span><img src="img/hud/head.png?v=4774bd37" width="15" height="14" alt=""><span class="map-name">Chicago</span></span>
     </div>
-    <button class="map-open" type="button" aria-haspopup="dialog" aria-label="Open the world map"></button>
+    <button class="map-open" type="button" aria-haspopup="dialog" aria-keyshortcuts="M" aria-label="Open the world map" title="Open the world map (M)"></button>
+    <span class="map-hint" aria-hidden="true">World map <kbd>M</kbd></span>
     <img class="map-frame" src="img/hud/frame.png?v=4774bd37" width="256" height="264" alt="">
     <button class="map-btn" type="button" data-map="reset" aria-label="Center the map on Chicago"></button>
     <button class="map-btn" type="button" data-map="out" aria-label="Zoom the map out"></button>
@@ -356,6 +358,8 @@
             <li>A preview card when the link is shared.</li>
             <li>A Terraria death screen for addresses that don’t exist, with a respawn back home.</li>
             <li>Map coins now change at every hundred, as in the game: 100 copper make a silver, 100 silver a gold.</li>
+            <li>A Map button in the top bar on phones and narrow windows, where the minimap has no room.</li>
+            <li>The minimap says it opens the world map, until you have opened it once.</li>
           </ul>
         </details>
         <details class="patch" name="patch">
@@ -429,6 +433,6 @@
 })();
 </script>
 <script src="critters.js?v=e8aad1ec" data-v="4774bd37" defer></script>
-<script src="hud.js?v=8c1296f7" defer></script>
+<script src="hud.js?v=737bf227" defer></script>
 </body>
 </html>

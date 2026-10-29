@@ -130,6 +130,7 @@ body {
   white-space: nowrap;
   transition: color var(--dur-micro) var(--ease-out);
 }
+.wordmark { margin-right: auto; }
 .wordmark:hover { color: var(--color-parchment-hi); }
 .wordmark:active { color: var(--color-parchment-lo); }
 .plank nav { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
@@ -146,6 +147,23 @@ body {
 .plank nav a:hover { background: var(--color-parchment); color: var(--color-parchment-ink); }
 .plank nav a:active { background: var(--color-parchment-lo); color: var(--color-parchment-ink); }
 .plank nav a[aria-current="true"] { background: var(--color-parchment); color: var(--color-parchment-ink); }
+/* the world map's way in where the minimap has no room: a tab like the others, with a pin */
+.map-tab {
+  display: inline-flex; align-items: center; gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm); border: 0; cursor: pointer;
+  background: var(--color-wood-dark); color: var(--color-parchment-hi);
+  font-family: var(--font-display); font-size: 0.75rem; line-height: 1.2;
+  text-shadow: 1px 1px 0 var(--color-wood-dark);
+  transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+}
+.map-tab[hidden] { display: none; }
+.map-tab { margin-left: auto; }
+/* where the tab shows on a wider screen, it takes the name's place, as the phone bar already does
+   (the name heads the page just below) */
+.plank:has(.map-tab:not([hidden])) .wordmark { display: none; }
+.map-tab:hover { background: var(--color-parchment); color: var(--color-parchment-ink); }
+.map-tab:active { background: var(--color-parchment-lo); color: var(--color-parchment-ink); }
+.map-tab:focus-visible { outline: 2px solid var(--color-parchment-hi); outline-offset: 2px; }
 
 /* ── panels ── */
 main { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--space-xl) + 2 * var(--px)); padding-block: var(--space-xl) var(--space-4xl); }
@@ -428,11 +446,14 @@ a.pub-title:active { color: var(--color-ink); }
   .item { padding: var(--space-md) var(--space-xs); }
   .slot-item { width: 52px; height: 52px; }
   :root { --hud-h: 104px; }
-  .plank { flex-wrap: nowrap; padding: var(--space-xs); }
+  .plank { flex-wrap: nowrap; column-gap: var(--space-2xs); padding: var(--space-xs); }
   .wordmark { display: none; }
   /* phones: all four sections visible at once, two by two */
-  .plank nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2xs); width: 100%; }
+  /* columns as wide as their longest name, so Publications fits beside the Map tab */
+  .plank nav { display: grid; grid-template-columns: repeat(2, auto); justify-content: space-evenly; gap: var(--space-2xs); width: 100%; }
   .plank nav a { display: grid; place-items: center; min-height: 36px; padding: var(--space-2xs); text-align: center; font-size: 0.6875rem; }
+  /* the Map tab stands beside the four, as tall as both rows: the pin over its name */
+  .map-tab { flex-direction: column; justify-content: center; align-self: stretch; gap: var(--space-2xs); padding: var(--space-2xs); font-size: 0.6875rem; }
   .px-btn { font-size: 0.75rem; }
   .px-btn-sm { min-height: 40px; padding-inline: var(--space-md); }
   .ground-text a { display: inline-block; padding-block: var(--space-xs); }
@@ -485,6 +506,16 @@ a.pub-title:active { color: var(--color-ink); }
   background: transparent; cursor: zoom-in; pointer-events: auto;
 }
 .map-open:focus-visible { outline: 2px solid var(--color-hud-text); outline-offset: -4px; }
+/* what the minimap opens, along its foot: shown until the map has been opened once, then only
+   on hover or focus */
+.map-hint {
+  position: absolute; left: 8px; top: 206px; width: 232px; text-align: center;
+  font-size: 13px; line-height: 1; white-space: nowrap; pointer-events: none;
+  transition: opacity var(--dur-short) var(--ease-out);
+}
+.map-hint kbd { display: inline-block; margin-left: var(--space-3xs); padding: var(--space-3xs) var(--space-2xs); font-family: var(--font-display); font-size: 9px; background: var(--color-map-void); box-shadow: 0 0 0 2px var(--color-hud-text); text-shadow: none; }
+.map-seen .map-hint { opacity: 0; }
+.map-seen .minimap:is(:hover, :focus-within) .map-hint { opacity: 1; }
 .map-btn {
   position: absolute; top: 235px; width: 26px; height: 28px; padding: 0; border: 0; border-radius: 50%;
   background: transparent; cursor: pointer; pointer-events: auto;

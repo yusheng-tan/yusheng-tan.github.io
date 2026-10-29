@@ -8,14 +8,15 @@
   status.querySelectorAll('[data-info]').forEach((el) => { out[el.dataset.info] = el; });
   const set = (k, text) => { if (out[k] && out[k].textContent !== text) out[k].textContent = text; };
 
-  // ── only where there is sky enough beside the panels ──
+  // ── only where there is sky enough beside the panels; where there isn't (phones, narrow
+  // windows) the top bar carries a Map button instead, so the world map is never out of reach ──
   const panel = document.querySelector('.panel');
+  const tab = document.querySelector('.map-tab');
   function fit() {
     status.classList.remove('is-off');
     const s = status.getBoundingClientRect();
-    if (!s.width) return;                       // hidden by the narrow-window rule
-    const p = panel.getBoundingClientRect();
-    status.classList.toggle('is-off', s.left < p.right + 24);
+    if (s.width) status.classList.toggle('is-off', s.left < panel.getBoundingClientRect().right + 24);
+    if (tab) tab.hidden = !!s.width && !status.classList.contains('is-off');
   }
   fit();
   addEventListener('resize', fit);
@@ -81,19 +82,28 @@
     fx = px - (px - fx) * (s / fs); fy = py - (py - fy) * (s / fs); fs = s;
     place();
   }
+  // the minimap names what it opens until the visitor has opened it once
+  const seen = () => { try { return !!localStorage.getItem('mapSeen'); } catch (e) { return false; } };
+  status.classList.toggle('map-seen', seen());
   function openMap() {
     if (dlg.open) return;
     dlg.showModal();
-    // the whole world across the screen, Chicago in the middle
-    fitS = fs = Math.min(view.clientWidth / TW, view.clientHeight / TH);
+    status.classList.add('map-seen');
+    try { localStorage.setItem('mapSeen', '1'); } catch (e) { /* the hint stays */ }
+    // the whole world across the screen, Chicago in the middle; on a tall phone screen the world
+    // would be a thin strip, so it opens taller (60% of the height) and is dragged sideways
+    fitS = Math.min(view.clientWidth / TW, view.clientHeight / TH);
+    fs = Math.max(fitS, view.clientHeight * 0.6 / TH);
     fx = view.clientWidth / 2 - CX * fs; fy = view.clientHeight / 2 - CY * fs;
     place();
   }
   map.querySelector('.map-open').addEventListener('click', openMap);
+  if (tab) tab.addEventListener('click', openMap);
+  // touch screens have no wheel or Esc key: the hint names what they do have
+  if (matchMedia('(pointer: coarse)').matches) dlg.querySelector('.wm-hint').textContent = 'Pinch to zoom, drag to move';
   dlg.querySelector('.wm-close').addEventListener('click', () => dlg.close());
   addEventListener('keydown', (e) => {
     if (e.key.toLowerCase() !== 'm' || e.metaKey || e.ctrlKey || e.altKey) return;
-    if (getComputedStyle(status).display === 'none') return;
     dlg.open ? dlg.close() : openMap();
   });
   view.addEventListener('wheel', (e) => {
