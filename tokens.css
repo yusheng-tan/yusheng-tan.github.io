@@ -36,6 +36,7 @@
   --color-hud-text: oklch(98% 0.01 90); --color-hud-outline: oklch(20% 0.03 260);
   --color-map-void: oklch(14% 0.02 260); --color-map-glint: oklch(98% 0.01 90 / 0.28);
   --color-firefly: oklch(93% 0.19 118);
+  --color-slain: oklch(64% 0.2 27);
   --window-tint: transparent;
 
   /* venue badges, coloured like item rarity */

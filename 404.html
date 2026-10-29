@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en" data-sky="night">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>You were slain</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="This page is not on Yusheng Tan's homepage. Respawn to go back.">
+<link rel="icon" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&family=Press+Start+2P&display=swap">
+<style>
+/* Hallmark · shape: the game's death screen, one line in red over the night sky, a tombstone and a respawn · genre: playful · theme: custom (the homepage's own system) · job: return to the homepage · signature: the death line over the tombstone
+ * axes: dark/pixel/chromatic-red · posture: committed · contrast: pass · fold: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H5 E4 S5 R4 V4 · weakest: P, a single screen with one job */
+@import url("/tokens.css");
+@import url("/base.css");
+html, body { height: 100%; overflow-x: clip; }
+body {
+  display: grid;
+  place-items: center;
+  background: url("/img/sky/stars-1.png") 0 0 / calc(131 * var(--px)) calc(97 * var(--px)), linear-gradient(var(--color-sky-top), var(--color-paper) 70%, var(--color-paper-2));
+  background-color: var(--color-paper);
+  image-rendering: pixelated;
+  color: var(--color-hud-text);
+  text-align: center;
+}
+.slain { display: grid; justify-items: center; gap: var(--space-lg); padding: var(--space-xl) var(--space-md); }
+.slain img { width: calc(14 * var(--px)); height: calc(15 * var(--px)); image-rendering: pixelated; animation: drop var(--dur-long) var(--ease-in) both; }
+h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 4.5vw, 2.25rem);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--color-slain);
+  text-shadow: 3px 3px 0 var(--color-hud-outline);
+  overflow-wrap: break-word;
+  text-wrap: balance;
+  min-width: 0;
+  animation: fade 1.2s var(--ease-out) both;
+}
+.why, .timer { margin: 0; font-weight: 800; text-shadow: 2px 2px 0 var(--color-hud-outline); }
+.why code { font-family: var(--font-body); color: var(--color-parchment); }
+.timer { font-size: var(--text-sm); }
+.respawn {
+  display: inline-block;
+  padding: var(--space-xs) var(--space-lg);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  text-decoration: none;
+  box-shadow: 0 0 0 var(--px) var(--color-wood-dark), inset 0 calc(-1 * var(--px)) 0 0 var(--color-wood-dark);
+  transition: transform var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out);
+}
+.respawn:hover { background: var(--color-slain); }
+.respawn:active { transform: translateY(var(--px)); }
+.respawn:focus-visible { outline: var(--px) solid var(--color-focus); outline-offset: var(--px); transition: none; }
+@keyframes drop { from { transform: translateY(-120px); } }
+@keyframes fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .slain img, h1 { animation: none; } }
+</style>
+</head>
+<body>
+<main class="slain">
+  <img src="/img/sky/tombstone.png" alt="A tombstone.">
+  <h1>You were slain…</h1>
+  <p class="why">There is nothing at <code class="path">this address</code>.</p>
+  <p class="timer" hidden>Respawning in <span class="secs">10</span></p>
+  <a class="respawn" href="/">Respawn</a>
+</main>
+<script>
+// as in the game, the player respawns on their own after a count; the button goes at once
+(() => {
+  document.querySelector('.path').textContent = decodeURIComponent(location.pathname);
+  const timer = document.querySelector('.timer'), secs = timer.querySelector('.secs');
+  let n = 10;
+  timer.hidden = false;
+  const tick = setInterval(() => {
+    n -= 1; secs.textContent = n;
+    if (n <= 0) { clearInterval(tick); location.href = '/'; }
+  }, 1000);
+})();
+</script>
+</body>
+</html>
