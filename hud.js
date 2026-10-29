@@ -85,6 +85,8 @@
   // one finger drags, two pinch
   const pts = new Map();
   let pinch = 0;
+  // the browser's own image drag would cancel the pointer partway through
+  view.addEventListener('dragstart', (e) => e.preventDefault());
   view.addEventListener('pointerdown', (e) => {
     view.setPointerCapture(e.pointerId);
     pts.set(e.pointerId, [e.clientX, e.clientY]);
@@ -137,7 +139,7 @@
       el.tabIndex = 0;
       el.setAttribute('role', 'img');
       el.setAttribute('aria-label', `${where}: ${plural(p.n, 'visit')}`);
-      el.innerHTML = `<img src="img/hud/coin-${coin(p.n)}.png" alt=""><span class="wm-count">${p.n.toLocaleString('en-US')}</span><span class="wm-where">${where}</span>`;
+      el.innerHTML = `<img src="img/hud/coin-${coin(p.n)}.png" alt="" draggable="false"><span class="wm-count">${p.n.toLocaleString('en-US')}</span><span class="wm-where">${where}</span>`;
       box.append(el);
       const x = (p.lon + 180) / 0.4, y = (84 - p.lat) / 0.4;
       // the home region sits beside the head rather than under it

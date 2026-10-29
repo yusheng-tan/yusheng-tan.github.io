@@ -463,7 +463,8 @@ a.pub-title:active { color: var(--color-ink); }
 @keyframes map-in { from { opacity: 0; } to { opacity: 1; } }
 .worldmap::backdrop { background: var(--color-map-void); }
 .worldmap img { image-rendering: pixelated; }
-.wm-view { position: absolute; inset: 0; overflow: clip; cursor: grab; touch-action: none; }
+.wm-view { position: absolute; inset: 0; overflow: clip; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.wm-view img { -webkit-user-drag: none; }
 .wm-view.is-dragging { cursor: grabbing; }
 .wm-world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 .wm-world img { display: block; max-width: none; }
